@@ -1,10 +1,6 @@
 import { supabase } from "./supabase";
 
-export async function createSale({
-  invoiceNumber,
-  customerName,
-  items,
-}) {
+export async function createSale({ invoiceNumber, customerName, items }) {
   const cleanItems = items.map((item) => ({
     product_id: Number(item.product_id),
     quantity: Number(item.quantity),
@@ -28,17 +24,18 @@ export async function getSales({
   startDate = "",
   endDate = "",
 } = {}) {
-  const { data: role, error: roleError } =
-    await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
   }
 
   const isStaff = role === "STAFF";
+  const salesTable = isStaff ? "staff_sales" : "manager_sales";
+  const saleItemsTable = isStaff ? "staff_sale_items" : "manager_sale_items";
 
   let query = supabase
-    .from(isStaff ? "staff_sales" : "sales")
+    .from(salesTable)
     .select(
       isStaff
         ? `
@@ -62,7 +59,7 @@ export async function getSales({
           created_by,
           created_by_name,
           created_at
-        `
+        `,
     )
     .order("created_at", { ascending: false });
 
@@ -70,22 +67,16 @@ export async function getSales({
 
   if (cleanSearch) {
     query = query.or(
-      `invoice_number.ilike.%${cleanSearch}%,customer_name.ilike.%${cleanSearch}%`
+      `invoice_number.ilike.%${cleanSearch}%,customer_name.ilike.%${cleanSearch}%`,
     );
   }
 
   if (startDate) {
-    query = query.gte(
-      "created_at",
-      `${startDate}T00:00:00`
-    );
+    query = query.gte("created_at", `${startDate}T00:00:00`);
   }
 
   if (endDate) {
-    query = query.lt(
-      "created_at",
-      `${endDate}T23:59:59.999`
-    );
+    query = query.lt("created_at", `${endDate}T23:59:59.999`);
   }
 
   const { data, error } = await query;
@@ -98,8 +89,7 @@ export async function getSales({
 }
 
 export async function getSaleItems(saleId) {
-  const { data: role, error: roleError } =
-    await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
@@ -108,11 +98,7 @@ export async function getSaleItems(saleId) {
   const isStaff = role === "STAFF";
 
   const { data, error } = await supabase
-    .from(
-      isStaff
-        ? "staff_sale_items"
-        : "sale_items"
-    )
+    .from(saleItemsTable)
     .select(
       isStaff
         ? `
@@ -133,7 +119,7 @@ export async function getSaleItems(saleId) {
           line_total,
           line_cost,
           line_profit
-        `
+        `,
     )
     .eq("sale_id", saleId)
     .order("id", { ascending: true });
@@ -146,17 +132,18 @@ export async function getSaleItems(saleId) {
 }
 
 export async function getSaleDetails(saleId) {
-  const { data: role, error: roleError } =
-    await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
   }
 
   const isStaff = role === "STAFF";
+  const salesTable = isStaff ? "staff_sales" : "manager_sales";
+  const saleItemsTable = isStaff ? "staff_sale_items" : "manager_sale_items";
 
   const saleQuery = supabase
-    .from(isStaff ? "staff_sales" : "sales")
+    .from(salesTable)
     .select(
       isStaff
         ? `
@@ -180,17 +167,13 @@ export async function getSaleDetails(saleId) {
           created_by,
           created_by_name,
           created_at
-        `
+        `,
     )
     .eq("id", saleId)
     .single();
 
   const itemsQuery = supabase
-    .from(
-      isStaff
-        ? "staff_sale_items"
-        : "sale_items"
-    )
+    .from(saleItemsTable)
     .select(
       isStaff
         ? `
@@ -211,16 +194,12 @@ export async function getSaleDetails(saleId) {
           line_total,
           line_cost,
           line_profit
-        `
+        `,
     )
     .eq("sale_id", saleId)
     .order("id", { ascending: true });
 
-  const [saleResult, itemsResult] =
-    await Promise.all([
-      saleQuery,
-      itemsQuery,
-    ]);
+  const [saleResult, itemsResult] = await Promise.all([saleQuery, itemsQuery]);
 
   if (saleResult.error) {
     throw saleResult.error;

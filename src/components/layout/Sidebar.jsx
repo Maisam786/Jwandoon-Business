@@ -7,6 +7,7 @@ import {
   FiUsers,
   FiSettings,
   FiLogOut,
+  FiClipboard,
 } from "react-icons/fi";
 
 import { useAuth } from "../../context/AuthContext";
@@ -16,36 +17,44 @@ const navigation = [
     label: "Overview",
     icon: FiGrid,
     path: "dashboard",
+    allowedRoles: ["OWNER", "MANAGER", "STAFF"],
   },
   {
     label: "Billing",
     icon: FiShoppingBag,
     path: "billing",
+    allowedRoles: ["OWNER", "MANAGER", "STAFF"],
   },
   {
     label: "Inventory",
     icon: FiPackage,
     path: "inventory",
+    allowedRoles: ["OWNER", "MANAGER", "STAFF"],
   },
   {
     label: "Products",
     icon: FiBox,
     path: "products",
+    allowedRoles: ["OWNER", "MANAGER", "STAFF"],
   },
   {
     label: "Sales",
     icon: FiShoppingBag,
     path: "sales",
+    allowedRoles: ["OWNER", "MANAGER", "STAFF"],
   },
   {
     label: "Reports",
     icon: FiBarChart2,
     path: "reports",
+    allowedRoles: ["OWNER", "MANAGER"],
   },
 ];
 
 export default function Sidebar({ activePage, onNavigate }) {
-  const { signOut } = useAuth();
+  const { profile, signOut } = useAuth();
+
+  const userRole = profile?.role;
 
   async function handleSignOut() {
     try {
@@ -54,6 +63,13 @@ export default function Sidebar({ activePage, onNavigate }) {
       console.error("Sign out failed:", error);
     }
   }
+
+  const visibleNavigation = navigation.filter((item) =>
+    item.allowedRoles.includes(userRole),
+  );
+
+  const canManageUsers = userRole === "OWNER";
+  const canViewAuditLogs = userRole === "OWNER";
 
   return (
     <aside className="sidebar">
@@ -70,7 +86,7 @@ export default function Sidebar({ activePage, onNavigate }) {
         <span className="sidebar-label">MAIN MENU</span>
 
         <nav className="sidebar-nav">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const active = activePage === item.path;
 
@@ -92,18 +108,35 @@ export default function Sidebar({ activePage, onNavigate }) {
       <div className="sidebar-bottom">
         <span className="sidebar-label">SYSTEM</span>
 
-        <button
-          type="button"
-          className="sidebar-link"
-          onClick={() => onNavigate("users")}
-        >
-          <FiUsers />
-          <span>Users</span>
-        </button>
+        {canManageUsers && (
+          <button
+            type="button"
+            className={`sidebar-link ${activePage === "users" ? "active" : ""}`}
+            onClick={() => onNavigate("users")}
+          >
+            <FiUsers />
+            <span>Users</span>
+          </button>
+        )}
+
+        {canViewAuditLogs && (
+          <button
+            type="button"
+            className={`sidebar-link ${
+              activePage === "auditLogs" ? "active" : ""
+            }`}
+            onClick={() => onNavigate("auditLogs")}
+          >
+            <FiClipboard />
+            <span>Audit Activity</span>
+          </button>
+        )}
 
         <button
           type="button"
-          className="sidebar-link"
+          className={`sidebar-link ${
+            activePage === "settings" ? "active" : ""
+          }`}
           onClick={() => onNavigate("settings")}
         >
           <FiSettings />

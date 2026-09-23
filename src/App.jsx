@@ -7,6 +7,8 @@ import Products from "./pages/Products";
 import Billing from "./pages/Billing";
 import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
+import Users from "./pages/Users";
+import AuditLogs from "./pages/AuditLogs";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
@@ -17,9 +19,33 @@ function ProtectedApp() {
   const { profile, loading, isAuthenticated } = useAuth();
   const [activePage, setActivePage] = useState("dashboard");
 
+  const pagePermissions = {
+    dashboard: ["OWNER", "MANAGER", "STAFF"],
+    billing: ["OWNER", "MANAGER", "STAFF"],
+    inventory: ["OWNER", "MANAGER", "STAFF"],
+    products: ["OWNER", "MANAGER", "STAFF"],
+    sales: ["OWNER", "MANAGER", "STAFF"],
+    reports: ["OWNER", "MANAGER"],
+    users: ["OWNER"],
+    auditLogs: ["OWNER"],
+  };
+
   useEffect(() => {
     function handleDashboardNavigation(event) {
-      setActivePage(event.detail);
+      const requestedPage = event.detail;
+      const allowedRoles = pagePermissions[requestedPage];
+
+      if (!allowedRoles) {
+        setActivePage("dashboard");
+        return;
+      }
+
+      if (!allowedRoles.includes(profile?.role)) {
+        setActivePage("dashboard");
+        return;
+      }
+
+      setActivePage(requestedPage);
     }
 
     window.addEventListener("jwandoon:navigate", handleDashboardNavigation);
@@ -30,7 +56,7 @@ function ProtectedApp() {
         handleDashboardNavigation,
       );
     };
-  }, []);
+  }, [profile]);
 
   if (loading) {
     return (
@@ -43,6 +69,20 @@ function ProtectedApp() {
 
   if (!isAuthenticated) {
     return <LoginScreen />;
+  }
+
+  const allowedRoles = pagePermissions[activePage];
+
+  if (!allowedRoles?.includes(profile?.role)) {
+    return (
+      <AppLayout
+        activePage="dashboard"
+        onNavigate={setActivePage}
+        profile={profile}
+      >
+        <Dashboard />
+      </AppLayout>
+    );
   }
 
   function renderPage() {
@@ -64,6 +104,12 @@ function ProtectedApp() {
 
       case "reports":
         return <Reports />;
+
+      case "users":
+        return <Users />;
+
+      case "auditLogs":
+        return <AuditLogs />;
 
       default:
         return <Dashboard />;

@@ -7,11 +7,15 @@ import {
   FiAlertTriangle,
   FiPlus,
   FiX,
+  FiEdit3,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 
 import { getProducts } from "../services/productService";
-import { receiveStock } from "../services/stockService";
+import {
+  receiveStock,
+  adjustStock,
+} from "../services/stockService";
 
 function formatCurrency(value) {
   return `Rs. ${Number(value || 0).toLocaleString("en-PK")}`;
@@ -22,6 +26,7 @@ export default function Inventory() {
 
   const canManageInventory =
     profile?.role === "OWNER" || profile?.role === "MANAGER";
+
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -29,11 +34,35 @@ export default function Inventory() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const [showReceiveModal, setShowReceiveModal] = useState(false);
+  // ---------------------------------------------------------
+  // Receive Stock
+  // ---------------------------------------------------------
 
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const [showReceiveModal, setShowReceiveModal] =
+    useState(false);
+
+  const [selectedProduct, setSelectedProduct] =
+    useState("");
+
   const [quantity, setQuantity] = useState("");
-  const [purchasePrice, setPurchasePrice] = useState("");
+  const [purchasePrice, setPurchasePrice] =
+    useState("");
+
+  // ---------------------------------------------------------
+  // Adjust Stock
+  // ---------------------------------------------------------
+
+  const [showAdjustModal, setShowAdjustModal] =
+    useState(false);
+
+  const [adjustmentProduct, setAdjustmentProduct] =
+    useState("");
+
+  const [adjustmentQuantity, setAdjustmentQuantity] =
+    useState("");
+
+  const [adjustmentReason, setAdjustmentReason] =
+    useState("");
 
   async function loadProducts() {
     setLoading(true);
@@ -44,7 +73,9 @@ export default function Inventory() {
       setProducts(data);
     } catch (error) {
       console.error(error);
-      setError(error?.message || "Unable to load inventory.");
+      setError(
+        error?.message || "Unable to load inventory.",
+      );
     } finally {
       setLoading(false);
     }
@@ -71,21 +102,28 @@ export default function Inventory() {
   }, [products, search]);
 
   const totalUnits = products.reduce(
-    (total, product) => total + Number(product.stock_quantity || 0),
+    (total, product) =>
+      total + Number(product.stock_quantity || 0),
     0,
   );
 
   const inventoryValue = products.reduce(
     (total, product) =>
       total +
-      Number(product.stock_quantity || 0) * Number(product.selling_price || 0),
+      Number(product.stock_quantity || 0) *
+        Number(product.selling_price || 0),
     0,
   );
 
   const lowStockProducts = products.filter(
     (product) =>
-      Number(product.stock_quantity || 0) <= Number(product.minimum_stock || 0),
+      Number(product.stock_quantity || 0) <=
+      Number(product.minimum_stock || 0),
   );
+
+  // ---------------------------------------------------------
+  // Receive Stock Modal
+  // ---------------------------------------------------------
 
   function openReceiveModal() {
     setSelectedProduct("");
@@ -115,14 +153,20 @@ export default function Inventory() {
       return;
     }
 
-    if (!Number.isInteger(receivedQuantity) || receivedQuantity <= 0) {
-      setError("Enter a valid whole-number quantity.");
+    if (
+      !Number.isInteger(receivedQuantity) ||
+      receivedQuantity <= 0
+    ) {
+      setError(
+        "Enter a valid whole-number quantity.",
+      );
       return;
     }
 
     if (
       purchasePrice !== "" &&
-      (Number(purchasePrice) < 0 || Number.isNaN(Number(purchasePrice)))
+      (Number(purchasePrice) < 0 ||
+        Number.isNaN(Number(purchasePrice)))
     ) {
       setError("Enter a valid purchase price.");
       return;
@@ -142,7 +186,114 @@ export default function Inventory() {
       await loadProducts();
     } catch (error) {
       console.error(error);
-      setError(error?.message || "Unable to receive stock.");
+      setError(
+        error?.message ||
+          "Unable to receive stock.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // ---------------------------------------------------------
+  // Adjust Stock Modal
+  // ---------------------------------------------------------
+
+  function openAdjustModal(product = null) {
+    setAdjustmentProduct(
+      product ? String(product.id) : "",
+    );
+    setAdjustmentQuantity("");
+    setAdjustmentReason("");
+    setError("");
+    setShowAdjustModal(true);
+  }
+
+  function closeAdjustModal() {
+    if (saving) return;
+
+    setShowAdjustModal(false);
+    setAdjustmentProduct("");
+    setAdjustmentQuantity("");
+    setAdjustmentReason("");
+  }
+
+  async function handleAdjustStock(event) {
+    event.preventDefault();
+
+    const productId = Number(adjustmentProduct);
+    const quantity = Number(adjustmentQuantity);
+    const reason = adjustmentReason.trim();
+
+    if (!productId) {
+      setError("Please select a product.");
+      return;
+    }
+
+    if (
+      !Number.isInteger(quantity) ||
+      quantity === 0
+    ) {
+      setError(
+        "Enter a non-zero whole number. Use + to add stock or - to remove stock.",
+      );
+      return;
+    }
+
+    if (!reason) {
+      setError(
+        "Please provide a reason for this adjustment.",
+      );
+      return;
+    }
+
+    if (reason.length > 500) {
+      setError(
+        "Adjustment reason cannot exceed 500 characters.",
+      );
+      return;
+    }
+
+    const product = products.find(
+      (item) => Number(item.id) === productId,
+    );
+
+    if (!product) {
+      setError("Selected product could not be found.");
+      return;
+    }
+
+    const currentStock = Number(
+      product.stock_quantity || 0,
+    );
+
+    const newStock = currentStock + quantity;
+
+    if (newStock < 0) {
+      setError(
+        `Stock cannot become negative. Current stock: ${currentStock}.`,
+      );
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
+    try {
+      await adjustStock({
+        productId,
+        quantity,
+        reason,
+      });
+
+      closeAdjustModal();
+      await loadProducts();
+    } catch (error) {
+      console.error(error);
+      setError(
+        error?.message ||
+          "Unable to adjust stock.",
+      );
     } finally {
       setSaving(false);
     }
@@ -150,28 +301,62 @@ export default function Inventory() {
 
   return (
     <div className="inventory-page">
+      {/* ---------------------------------------------------
+          PAGE HEADER
+      --------------------------------------------------- */}
+
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">INVENTORY MANAGEMENT</span>
+          <span className="page-eyebrow">
+            INVENTORY MANAGEMENT
+          </span>
 
           <h1>Stock Control</h1>
 
-          <p>Monitor stock levels, receive new products and track inventory.</p>
+          <p>
+            Monitor stock levels, receive new products and
+            track inventory.
+          </p>
         </div>
 
         {canManageInventory && (
-          <button
-            type="button"
-            className="primary-business-button"
-            onClick={openReceiveModal}
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              flexWrap: "wrap",
+            }}
           >
-            <FiPlus />
-            Receive Stock
-          </button>
+            <button
+              type="button"
+              className="secondary-business-button"
+              onClick={() => openAdjustModal()}
+            >
+              <FiEdit3 />
+              Adjust Stock
+            </button>
+
+            <button
+              type="button"
+              className="primary-business-button"
+              onClick={openReceiveModal}
+            >
+              <FiPlus />
+              Receive Stock
+            </button>
+          </div>
         )}
       </div>
 
-      {error && <div className="products-error">{error}</div>}
+      {error && (
+        <div className="products-error">
+          {error}
+        </div>
+      )}
+
+      {/* ---------------------------------------------------
+          INVENTORY STATS
+      --------------------------------------------------- */}
 
       <section className="inventory-stats">
         <div className="inventory-stat-card">
@@ -205,7 +390,9 @@ export default function Inventory() {
 
           <div>
             <span>Inventory Value</span>
-            <strong>{formatCurrency(inventoryValue)}</strong>
+            <strong>
+              {formatCurrency(inventoryValue)}
+            </strong>
             <small>Based on selling prices</small>
           </div>
         </div>
@@ -217,16 +404,26 @@ export default function Inventory() {
 
           <div>
             <span>Low Stock</span>
-            <strong>{lowStockProducts.length}</strong>
-            <small>At or below minimum level</small>
+            <strong>
+              {lowStockProducts.length}
+            </strong>
+            <small>
+              At or below minimum level
+            </small>
           </div>
         </div>
       </section>
 
+      {/* ---------------------------------------------------
+          INVENTORY TABLE
+      --------------------------------------------------- */}
+
       <section className="inventory-panel">
         <div className="inventory-panel-header">
           <div>
-            <span className="panel-eyebrow">PRODUCT STOCK</span>
+            <span className="panel-eyebrow">
+              PRODUCT STOCK
+            </span>
 
             <h2>Current Inventory</h2>
           </div>
@@ -237,7 +434,9 @@ export default function Inventory() {
             <input
               type="search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
               placeholder="Search product number or name..."
             />
           </div>
@@ -252,33 +451,53 @@ export default function Inventory() {
                 <th>Selling Price</th>
                 <th>Stock</th>
                 <th>Status</th>
+
+                {canManageInventory && (
+                  <th>Action</th>
+                )}
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="products-table-message">
+                  <td
+                    colSpan={
+                      canManageInventory ? "6" : "5"
+                    }
+                    className="products-table-message"
+                  >
                     Loading inventory...
                   </td>
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="products-table-message">
+                  <td
+                    colSpan={
+                      canManageInventory ? "6" : "5"
+                    }
+                    className="products-table-message"
+                  >
                     No products found.
                   </td>
                 </tr>
               ) : (
                 filteredProducts.map((product) => {
-                  const stock = Number(product.stock_quantity || 0);
+                  const stock = Number(
+                    product.stock_quantity || 0,
+                  );
 
-                  const minimumStock = Number(product.minimum_stock || 0);
+                  const minimumStock = Number(
+                    product.minimum_stock || 0,
+                  );
 
                   let status = "In Stock";
 
                   if (stock === 0) {
                     status = "Out of Stock";
-                  } else if (stock <= minimumStock) {
+                  } else if (
+                    stock <= minimumStock
+                  ) {
                     status = "Low Stock";
                   }
 
@@ -292,14 +511,22 @@ export default function Inventory() {
 
                       <td>
                         <div className="inventory-product">
-                          <strong>{product.name}</strong>
+                          <strong>
+                            {product.name}
+                          </strong>
                         </div>
                       </td>
 
-                      <td>{formatCurrency(product.selling_price)}</td>
+                      <td>
+                        {formatCurrency(
+                          product.selling_price,
+                        )}
+                      </td>
 
                       <td>
-                        <strong className="stock-number">{stock}</strong>
+                        <strong className="stock-number">
+                          {stock}
+                        </strong>
                       </td>
 
                       <td>
@@ -311,6 +538,21 @@ export default function Inventory() {
                           {status}
                         </span>
                       </td>
+
+                      {canManageInventory && (
+                        <td>
+                          <button
+                            type="button"
+                            className="secondary-business-button"
+                            onClick={() =>
+                              openAdjustModal(product)
+                            }
+                          >
+                            <FiEdit3 />
+                            Adjust
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })
@@ -319,23 +561,32 @@ export default function Inventory() {
           </table>
         </div>
 
-        {!loading && filteredProducts.length === 0 && (
-          <div className="inventory-empty">
-            <FiSearch />
+        {!loading &&
+          filteredProducts.length === 0 && (
+            <div className="inventory-empty">
+              <FiSearch />
 
-            <h3>No products found</h3>
+              <h3>No products found</h3>
 
-            <p>Try another product number or name.</p>
-          </div>
-        )}
+              <p>
+                Try another product number or name.
+              </p>
+            </div>
+          )}
       </section>
+
+      {/* ===================================================
+          RECEIVE STOCK MODAL
+      =================================================== */}
 
       {showReceiveModal && (
         <div className="business-modal-overlay">
           <div className="business-modal">
             <div className="business-modal-header">
               <div>
-                <span className="page-eyebrow">INVENTORY</span>
+                <span className="page-eyebrow">
+                  INVENTORY
+                </span>
 
                 <h2>Receive Stock</h2>
               </div>
@@ -344,6 +595,7 @@ export default function Inventory() {
                 type="button"
                 className="modal-close"
                 onClick={closeReceiveModal}
+                disabled={saving}
               >
                 <FiX />
               </button>
@@ -351,18 +603,29 @@ export default function Inventory() {
 
             <form onSubmit={handleReceiveStock}>
               <div className="business-form-group">
-                <label htmlFor="inventory-product">Product</label>
+                <label htmlFor="inventory-product">
+                  Product
+                </label>
 
                 <select
                   id="inventory-product"
                   value={selectedProduct}
-                  onChange={(event) => setSelectedProduct(event.target.value)}
+                  onChange={(event) =>
+                    setSelectedProduct(
+                      event.target.value,
+                    )
+                  }
                   required
                 >
-                  <option value="">Select product...</option>
+                  <option value="">
+                    Select product...
+                  </option>
 
                   {products.map((product) => (
-                    <option key={product.id} value={product.id}>
+                    <option
+                      key={product.id}
+                      value={product.id}
+                    >
                       #{product.id} — {product.name}
                     </option>
                   ))}
@@ -371,7 +634,9 @@ export default function Inventory() {
 
               <div className="business-form-row">
                 <div className="business-form-group">
-                  <label htmlFor="inventory-quantity">Quantity</label>
+                  <label htmlFor="inventory-quantity">
+                    Quantity
+                  </label>
 
                   <input
                     id="inventory-quantity"
@@ -379,14 +644,20 @@ export default function Inventory() {
                     min="1"
                     step="1"
                     value={quantity}
-                    onChange={(event) => setQuantity(event.target.value)}
+                    onChange={(event) =>
+                      setQuantity(
+                        event.target.value,
+                      )
+                    }
                     placeholder="e.g. 20"
                     required
                   />
                 </div>
 
                 <div className="business-form-group">
-                  <label htmlFor="inventory-cost">Purchase Price</label>
+                  <label htmlFor="inventory-cost">
+                    Purchase Price
+                  </label>
 
                   <input
                     id="inventory-cost"
@@ -394,7 +665,11 @@ export default function Inventory() {
                     min="0"
                     step="0.01"
                     value={purchasePrice}
-                    onChange={(event) => setPurchasePrice(event.target.value)}
+                    onChange={(event) =>
+                      setPurchasePrice(
+                        event.target.value,
+                      )
+                    }
                     placeholder="e.g. 300"
                   />
                 </div>
@@ -404,8 +679,9 @@ export default function Inventory() {
                 <FiArrowDownCircle />
 
                 <p>
-                  Stock will be permanently added to the database and recorded
-                  in the stock transaction history.
+                  Stock will be permanently added to the
+                  database and recorded in the stock
+                  transaction history.
                 </p>
               </div>
 
@@ -426,7 +702,175 @@ export default function Inventory() {
                 >
                   <FiPlus />
 
-                  {saving ? "Saving..." : "Add Stock"}
+                  {saving
+                    ? "Saving..."
+                    : "Add Stock"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================
+          ADJUST STOCK MODAL
+      =================================================== */}
+
+      {showAdjustModal && (
+        <div className="business-modal-overlay">
+          <div className="business-modal">
+            <div className="business-modal-header">
+              <div>
+                <span className="page-eyebrow">
+                  INVENTORY
+                </span>
+
+                <h2>Adjust Stock</h2>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closeAdjustModal}
+                disabled={saving}
+              >
+                <FiX />
+              </button>
+            </div>
+
+            <form onSubmit={handleAdjustStock}>
+              <div className="business-form-group">
+                <label htmlFor="adjustment-product">
+                  Product
+                </label>
+
+                <select
+                  id="adjustment-product"
+                  value={adjustmentProduct}
+                  onChange={(event) =>
+                    setAdjustmentProduct(
+                      event.target.value,
+                    )
+                  }
+                  required
+                >
+                  <option value="">
+                    Select product...
+                  </option>
+
+                  {products.map((product) => (
+                    <option
+                      key={product.id}
+                      value={product.id}
+                    >
+                      #{product.id} — {product.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {adjustmentProduct && (
+                <div className="stock-receive-note">
+                  <FiBox />
+
+                  <p>
+                    Current stock:{" "}
+                    <strong>
+                      {Number(
+                        products.find(
+                          (product) =>
+                            Number(product.id) ===
+                            Number(
+                              adjustmentProduct,
+                            ),
+                        )?.stock_quantity || 0,
+                      )}
+                    </strong>{" "}
+                    units
+                  </p>
+                </div>
+              )}
+
+              <div className="business-form-group">
+                <label htmlFor="adjustment-quantity">
+                  Adjustment Quantity
+                </label>
+
+                <input
+                  id="adjustment-quantity"
+                  type="number"
+                  step="1"
+                  value={adjustmentQuantity}
+                  onChange={(event) =>
+                    setAdjustmentQuantity(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="e.g. +5 or -3"
+                  required
+                />
+
+                <small>
+                  Use a positive number to add stock or a
+                  negative number to remove stock.
+                </small>
+              </div>
+
+              <div className="business-form-group">
+                <label htmlFor="adjustment-reason">
+                  Reason
+                </label>
+
+                <textarea
+                  id="adjustment-reason"
+                  value={adjustmentReason}
+                  onChange={(event) =>
+                    setAdjustmentReason(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="e.g. Physical stock count correction"
+                  rows="4"
+                  maxLength="500"
+                  required
+                />
+
+                <small>
+                  Required for the stock history and audit
+                  record.
+                </small>
+              </div>
+
+              <div className="stock-receive-note">
+                <FiEdit3 />
+
+                <p>
+                  This adjustment will permanently change
+                  the stock quantity and create a stock
+                  transaction and audit record.
+                </p>
+              </div>
+
+              <div className="business-modal-actions">
+                <button
+                  type="button"
+                  className="secondary-business-button"
+                  onClick={closeAdjustModal}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-business-button"
+                  disabled={saving}
+                >
+                  <FiEdit3 />
+
+                  {saving
+                    ? "Saving..."
+                    : "Save Adjustment"}
                 </button>
               </div>
             </form>

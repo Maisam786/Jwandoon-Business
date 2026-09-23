@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
   FiShoppingBag,
   FiDollarSign,
@@ -50,6 +51,10 @@ function getStockStatus(product) {
 }
 
 export default function Dashboard() {
+  const { profile } = useAuth();
+
+  const canViewProfit =
+    profile?.role === "OWNER" || profile?.role === "MANAGER";
   const [dashboard, setDashboard] = useState({
     totalSales: 0,
     totalProfit: 0,
@@ -81,8 +86,7 @@ export default function Dashboard() {
       console.error("Failed to load dashboard:", err);
 
       setError(
-        err?.message ||
-          "Unable to load dashboard data. Please try again."
+        err?.message || "Unable to load dashboard data. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -104,7 +108,7 @@ export default function Dashboard() {
     window.dispatchEvent(
       new CustomEvent("jwandoon:navigate", {
         detail: "sales",
-      })
+      }),
     );
   }
 
@@ -112,7 +116,7 @@ export default function Dashboard() {
     window.dispatchEvent(
       new CustomEvent("jwandoon:navigate", {
         detail: "inventory",
-      })
+      }),
     );
   }
 
@@ -131,22 +135,18 @@ export default function Dashboard() {
     <div className="dashboard-page">
       <div className="page-header">
         <div>
-          <span className="page-eyebrow">
-            JWANDOON BUSINESS
-          </span>
+          <span className="page-eyebrow">JWANDOON BUSINESS</span>
 
           <h1>Business Overview</h1>
 
           <p>
-            Monitor your sales, inventory and business
-            performance from one place.
+            Monitor your sales, inventory and business performance from one
+            place.
           </p>
         </div>
 
         <div className="dashboard-header-actions">
-          <div className="dashboard-date">
-            {formatDate()}
-          </div>
+          <div className="dashboard-date">{formatDate()}</div>
 
           <button
             type="button"
@@ -154,9 +154,7 @@ export default function Dashboard() {
             onClick={() => loadDashboard(true)}
             disabled={refreshing}
           >
-            <FiRefreshCw
-              className={refreshing ? "dashboard-spin" : ""}
-            />
+            <FiRefreshCw className={refreshing ? "dashboard-spin" : ""} />
 
             {refreshing ? "Refreshing..." : "Refresh"}
           </button>
@@ -172,34 +170,28 @@ export default function Dashboard() {
             <span>{error}</span>
           </div>
 
-          <button
-            type="button"
-            onClick={() => loadDashboard(true)}
-          >
+          <button type="button" onClick={() => loadDashboard(true)}>
             Try again
           </button>
         </div>
       )}
 
       <section className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FiDollarSign />
+        {canViewProfit && (
+          <div className="stat-card">
+            <div className="stat-icon">
+              <FiTrendingUp />
+            </div>
+
+            <div>
+              <span>Today's Profit</span>
+
+              <strong>{formatCurrency(dashboard.totalProfit)}</strong>
+
+              <small>Gross profit from today's sales</small>
+            </div>
           </div>
-
-          <div>
-            <span>Today's Sales</span>
-
-            <strong>
-              {formatCurrency(dashboard.totalSales)}
-            </strong>
-
-            <small>
-              {dashboard.invoiceCount} completed invoice
-              {dashboard.invoiceCount === 1 ? "" : "s"}
-            </small>
-          </div>
-        </div>
+        )}
 
         <div className="stat-card">
           <div className="stat-icon">
@@ -209,13 +201,9 @@ export default function Dashboard() {
           <div>
             <span>Today's Profit</span>
 
-            <strong>
-              {formatCurrency(dashboard.totalProfit)}
-            </strong>
+            <strong>{formatCurrency(dashboard.totalProfit)}</strong>
 
-            <small>
-              Gross profit from today's sales
-            </small>
+            <small>Gross profit from today's sales</small>
           </div>
         </div>
 
@@ -252,9 +240,7 @@ export default function Dashboard() {
         <div className="dashboard-panel">
           <div className="panel-header">
             <div>
-              <span className="panel-eyebrow">
-                BUSINESS ACTIVITY
-              </span>
+              <span className="panel-eyebrow">BUSINESS ACTIVITY</span>
 
               <h2>Recent Sales</h2>
             </div>
@@ -277,43 +263,26 @@ export default function Dashboard() {
 
               <h3>No sales yet</h3>
 
-              <p>
-                Completed invoices will appear here
-                automatically.
-              </p>
+              <p>Completed invoices will appear here automatically.</p>
             </div>
           ) : (
             <div className="recent-sales-list">
               {dashboard.recentSales.map((sale) => (
-                <div
-                  className="recent-sale"
-                  key={sale.id}
-                >
+                <div className="recent-sale" key={sale.id}>
                   <div className="recent-sale-icon">
                     <FiShoppingBag />
                   </div>
 
                   <div className="recent-sale-info">
-                    <strong>
-                      {sale.invoice_number}
-                    </strong>
+                    <strong>{sale.invoice_number}</strong>
 
-                    <span>
-                      {sale.customer_name ||
-                        "Walk-in Customer"}
-                    </span>
+                    <span>{sale.customer_name || "Walk-in Customer"}</span>
                   </div>
 
                   <div className="recent-sale-time">
-                    <span>
-                      {formatTime(sale.created_at)}
-                    </span>
+                    <span>{formatTime(sale.created_at)}</span>
 
-                    <strong>
-                      {formatCurrency(
-                        sale.total_amount
-                      )}
-                    </strong>
+                    <strong>{formatCurrency(sale.total_amount)}</strong>
                   </div>
                 </div>
               ))}
@@ -324,9 +293,7 @@ export default function Dashboard() {
         <div className="dashboard-panel">
           <div className="panel-header">
             <div>
-              <span className="panel-eyebrow">
-                INVENTORY
-              </span>
+              <span className="panel-eyebrow">INVENTORY</span>
 
               <h2>Stock Alerts</h2>
             </div>
@@ -350,42 +317,30 @@ export default function Dashboard() {
               <h3>Inventory looks good</h3>
 
               <p>
-                No products are currently at or below
-                their minimum stock level.
+                No products are currently at or below their minimum stock level.
               </p>
             </div>
           ) : (
             <div className="stock-alert-list">
-              {dashboard.lowStockProducts
-                .slice(0, 6)
-                .map((product) => (
-                  <div
-                    className="stock-alert"
-                    key={product.id}
-                  >
-                    <div className="stock-alert-icon">
-                      <FiAlertCircle />
-                    </div>
-
-                    <div className="stock-alert-info">
-                      <strong>{product.name}</strong>
-
-                      <span>
-                        Minimum: {product.minimum_stock}
-                      </span>
-                    </div>
-
-                    <div className="stock-alert-quantity">
-                      <strong>
-                        {product.stock_quantity}
-                      </strong>
-
-                      <span>
-                        {getStockStatus(product)}
-                      </span>
-                    </div>
+              {dashboard.lowStockProducts.slice(0, 6).map((product) => (
+                <div className="stock-alert" key={product.id}>
+                  <div className="stock-alert-icon">
+                    <FiAlertCircle />
                   </div>
-                ))}
+
+                  <div className="stock-alert-info">
+                    <strong>{product.name}</strong>
+
+                    <span>Minimum: {product.minimum_stock}</span>
+                  </div>
+
+                  <div className="stock-alert-quantity">
+                    <strong>{product.stock_quantity}</strong>
+
+                    <span>{getStockStatus(product)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -394,9 +349,7 @@ export default function Dashboard() {
       <div className="dashboard-footer-note">
         <FiClock />
 
-        <span>
-          Dashboard automatically refreshes every minute.
-        </span>
+        <span>Dashboard automatically refreshes every minute.</span>
       </div>
     </div>
   );
