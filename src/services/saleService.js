@@ -1,15 +1,28 @@
 import { supabase } from "./supabase";
 
-export async function createSale({ invoiceNumber, customerName, items }) {
+export async function createSale({
+  invoiceNumber,
+  customerName,
+  discount = 0,
+  items,
+}) {
   const cleanItems = items.map((item) => ({
     product_id: Number(item.product_id),
     quantity: Number(item.quantity),
   }));
 
+  const cleanDiscount =
+    discount === "" || discount == null ? 0 : Number(discount);
+
+  if (!Number.isFinite(cleanDiscount) || cleanDiscount < 0) {
+    throw new Error("Discount must be a valid non-negative number.");
+  }
+
   const { data, error } = await supabase.rpc("create_sale", {
     p_invoice_number: invoiceNumber,
     p_customer_name: customerName?.trim() || null,
     p_items: cleanItems,
+    p_discount_amount: cleanDiscount,
   });
 
   if (error) {
@@ -24,7 +37,8 @@ export async function getSales({
   startDate = "",
   endDate = "",
 } = {}) {
-  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } =
+    await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
@@ -32,7 +46,6 @@ export async function getSales({
 
   const isStaff = role === "STAFF";
   const salesTable = isStaff ? "staff_sales" : "manager_sales";
-  const saleItemsTable = isStaff ? "staff_sale_items" : "manager_sale_items";
 
   let query = supabase
     .from(salesTable)
@@ -43,6 +56,7 @@ export async function getSales({
           invoice_number,
           customer_name,
           subtotal,
+          discount_amount,
           total_amount,
           created_by,
           created_by_name,
@@ -53,6 +67,7 @@ export async function getSales({
           invoice_number,
           customer_name,
           subtotal,
+          discount_amount,
           total_amount,
           total_cost,
           gross_profit,
@@ -89,13 +104,17 @@ export async function getSales({
 }
 
 export async function getSaleItems(saleId) {
-  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } =
+    await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
   }
 
   const isStaff = role === "STAFF";
+  const saleItemsTable = isStaff
+    ? "staff_sale_items"
+    : "manager_sale_items";
 
   const { data, error } = await supabase
     .from(saleItemsTable)
@@ -132,7 +151,8 @@ export async function getSaleItems(saleId) {
 }
 
 export async function getSaleDetails(saleId) {
-  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } =
+    await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
@@ -140,7 +160,9 @@ export async function getSaleDetails(saleId) {
 
   const isStaff = role === "STAFF";
   const salesTable = isStaff ? "staff_sales" : "manager_sales";
-  const saleItemsTable = isStaff ? "staff_sale_items" : "manager_sale_items";
+  const saleItemsTable = isStaff
+    ? "staff_sale_items"
+    : "manager_sale_items";
 
   const saleQuery = supabase
     .from(salesTable)
@@ -151,6 +173,7 @@ export async function getSaleDetails(saleId) {
           invoice_number,
           customer_name,
           subtotal,
+          discount_amount,
           total_amount,
           created_by,
           created_by_name,
@@ -161,6 +184,7 @@ export async function getSaleDetails(saleId) {
           invoice_number,
           customer_name,
           subtotal,
+          discount_amount,
           total_amount,
           total_cost,
           gross_profit,
@@ -199,7 +223,10 @@ export async function getSaleDetails(saleId) {
     .eq("sale_id", saleId)
     .order("id", { ascending: true });
 
-  const [saleResult, itemsResult] = await Promise.all([saleQuery, itemsQuery]);
+  const [saleResult, itemsResult] = await Promise.all([
+    saleQuery,
+    itemsQuery,
+  ]);
 
   if (saleResult.error) {
     throw saleResult.error;
