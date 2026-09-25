@@ -1,35 +1,24 @@
 import { supabase } from "./supabase";
 
-/**
- * Sign in an existing business user.
- */
 export async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const { data, error } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data;
 }
 
-/**
- * Sign out the current user.
- */
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
+  const { error } =
+    await supabase.auth.signOut();
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
-/**
- * Get the currently authenticated user.
- */
 export async function getCurrentUser() {
   const {
     data: { user },
@@ -38,19 +27,114 @@ export async function getCurrentUser() {
   return user;
 }
 
-/**
- * Get the business profile belonging to the authenticated user.
- */
 export async function getUserProfile(userId) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
+  const { data, error } =
+    await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+/*
+ * Ask the server to generate and send the OTP
+ * to the protected JWANDOON business mailbox.
+ */
+export async function sendLoginOtp(email) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error(
+      "Your login session is missing. Please sign in again.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.functions.invoke(
+      "send-login-otp",
+      {
+        body: {
+          email,
+        },
+      },
+    );
 
   if (error) {
     throw error;
   }
 
+  if (!data?.success) {
+    throw new Error(
+      data?.error ||
+        "Unable to send verification code.",
+    );
+  }
+
   return data;
+}
+
+/*
+ * Verify the OTP against the exact authenticated
+ * Supabase session.
+ */
+export async function verifyLoginOtp(
+  email,
+  otp,
+) {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    throw new Error(
+      "Your login session is missing. Please sign in again.",
+    );
+  }
+
+  const { data, error } =
+    await supabase.functions.invoke(
+      "verify-login-otp",
+      {
+        body: {
+          email,
+          otp,
+        },
+      },
+    );
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.success) {
+    throw new Error(
+      data?.error ||
+        "Unable to verify the code.",
+    );
+  }
+
+  return data;
+}
+
+/*
+ * This asks Postgres whether the current
+ * authenticated session has completed OTP verification.
+ */
+export async function isOtpVerified() {
+  const { data, error } =
+    await supabase.rpc(
+      "is_otp_verified",
+    );
+
+  if (error) {
+    throw error;
+  }
+
+  return data === true;
 }
