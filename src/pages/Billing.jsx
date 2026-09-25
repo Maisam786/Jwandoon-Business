@@ -649,17 +649,17 @@ export default function Billing() {
   }, [scannerOpen]);
 
   function addItem() {
-    if (saleCompleted) {
-      return;
-    }
-
-    setItems((current) => [
-      ...current,
-      {
-        ...EMPTY_ITEM,
-      },
-    ]);
+  if (saleCompleted) {
+    return;
   }
+
+  setItems((current) => [
+    {
+      ...EMPTY_ITEM,
+    },
+    ...current,
+  ]);
+}
 
   function removeItem(index) {
     if (saleCompleted) {
