@@ -10,6 +10,7 @@ import {
   FiEdit3,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import "./Inventory.css";
 
 import { getProducts } from "../services/productService";
 import {

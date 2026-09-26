@@ -1,0 +1,385 @@
+/* =========================================================
+   AUDIT LOGS
+   JWANDOON BUSINESS MANAGEMENT
+   UI ONLY — NO FUNCTIONALITY CHANGES
+   ========================================================= */
+
+.page-section {
+  width: 100%;
+  min-width: 0;
+  color: var(--color-text);
+}
+
+/* =========================================================
+   ACCESS DENIED
+   ========================================================= */
+
+.page-section > h1 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 32px;
+  line-height: 1.15;
+}
+
+.page-section > p {
+  margin: 9px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.page-section .page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.page-section .page-header h1 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: clamp(30px, 3vw, 38px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.page-section .page-header p {
+  max-width: 650px;
+  margin: 9px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   REFRESH BUTTON
+   ========================================================= */
+
+.page-section .page-header > button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.page-section .page-header > button:hover:not(:disabled) {
+  border-color: rgba(194, 142, 46, 0.35);
+  background: var(--color-surface-soft);
+  color: var(--color-primary-hover);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.page-section .page-header > button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.page-section .error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border: 1px solid rgba(167, 70, 50, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(167, 70, 50, 0.055);
+  color: var(--color-danger);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.page-section .empty-state {
+  display: flex;
+  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+/* =========================================================
+   TABLE CONTAINER
+   ========================================================= */
+
+.page-section .table-container {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(43, 27, 16, 0.18) transparent;
+}
+
+.page-section .table-container::-webkit-scrollbar {
+  height: 7px;
+}
+
+.page-section .table-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-section .table-container::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(43, 27, 16, 0.16);
+}
+
+/* =========================================================
+   AUDIT TABLE
+   ========================================================= */
+
+.page-section .table-container table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.page-section .table-container th {
+  height: 46px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(243, 235, 224, 0.48);
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.page-section .table-container td {
+  padding: 15px 18px;
+  border-bottom: 1px solid rgba(43, 27, 16, 0.055);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+  vertical-align: top;
+}
+
+.page-section .table-container tbody tr {
+  transition: background-color 0.18s ease;
+}
+
+.page-section .table-container tbody tr:hover {
+  background: rgba(243, 235, 224, 0.3);
+}
+
+.page-section .table-container tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* =========================================================
+   COLUMN-SPECIFIC STYLING
+   ========================================================= */
+
+/* Action */
+.page-section .table-container td:first-child {
+  width: 150px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Entity */
+.page-section .table-container td:nth-child(2) {
+  width: 180px;
+  color: var(--color-text-secondary);
+  font-weight: 700;
+}
+
+/* Details */
+.page-section .table-container td:nth-child(3) {
+  width: auto;
+  min-width: 420px;
+}
+
+/* Date */
+.page-section .table-container td:last-child {
+  width: 180px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   JSON DETAILS
+   ========================================================= */
+
+.page-section .table-container pre {
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 10px 12px;
+  border: 1px solid rgba(43, 27, 16, 0.07);
+  border-radius: 8px;
+  background: rgba(243, 235, 224, 0.48);
+  color: var(--color-text-secondary);
+  font-family: "Manrope", sans-serif !important;
+  font-size: 10px;
+  line-height: 1.55;
+  overflow-x: auto;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* =========================================================
+   LOADING STATE
+   ========================================================= */
+
+.page-section .table-container:has(+ .empty-state) {
+  min-height: 0;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .page-section .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .page-section .page-header > button {
+    width: 100%;
+  }
+
+  .page-section .table-container table {
+    min-width: 880px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .page-section .page-header h1 {
+    font-size: 30px;
+  }
+
+  .page-section .page-header p {
+    font-size: 12px;
+  }
+
+  .page-section .empty-state {
+    min-height: 180px;
+    padding: 24px 15px;
+  }
+
+  .page-section .table-container {
+    border-radius: 13px;
+  }
+
+  .page-section .table-container th,
+  .page-section .table-container td {
+    padding-right: 13px;
+    padding-left: 13px;
+  }
+
+  .page-section .table-container table {
+    min-width: 860px;
+  }
+}
+
+/* =========================================================
+   VERY NARROW DEVICES
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .page-section .page-header h1 {
+    font-size: 27px;
+  }
+
+  .page-section .page-header p {
+    font-size: 11px;
+  }
+
+  .page-section .page-header > button {
+    min-height: 40px;
+  }
+
+  .page-section .error-message {
+    padding: 11px 12px;
+    font-size: 11px;
+  }
+
+  .page-section .empty-state {
+    min-height: 160px;
+    padding: 20px 12px;
+    font-size: 11px;
+  }
+
+  .page-section .table-container table {
+    min-width: 840px;
+  }
+
+  .page-section .table-container th,
+  .page-section .table-container td {
+    padding-right: 11px;
+    padding-left: 11px;
+  }
+
+  .page-section .table-container pre {
+    padding: 8px 9px;
+    font-size: 9px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .page-section .page-header > button,
+  .page-section .table-container tbody tr {
+    transition: none;
+  }
+}

@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 
 import { getDashboardData } from "../services/dashboardService";
+import "./Dashboard.css";
 
 function formatCurrency(value) {
   return `Rs. ${Number(value || 0).toLocaleString("en-PK", {

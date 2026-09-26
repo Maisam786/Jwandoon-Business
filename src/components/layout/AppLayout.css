@@ -1,0 +1,99 @@
+/* =========================================================
+   JWANDOON BUSINESS LAYOUT
+   ========================================================= */
+
+.business-layout {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  background: var(--color-background);
+
+  overflow-x: hidden;
+}
+
+
+/* =========================================================
+   MAIN CONTENT AREA
+   ========================================================= */
+
+.business-main {
+  width: calc(100% - var(--sidebar-width));
+  min-width: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  margin-left: var(--sidebar-width);
+
+  background: var(--color-background);
+
+  transition:
+    width 0.25s ease,
+    margin-left 0.25s ease;
+}
+
+
+/* =========================================================
+   PAGE CONTENT
+   ========================================================= */
+
+.business-content {
+  width: 100%;
+  min-width: 0;
+
+  padding: 30px 32px 40px;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .business-content {
+    padding: 26px 24px 36px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .business-main {
+    width: calc(100% - 72px);
+    margin-left: 72px;
+  }
+
+  .business-content {
+    padding: 22px 18px 32px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .business-content {
+    padding: 20px 14px 28px;
+  }
+}
+
+
+/* =========================================================
+   VERY NARROW DEVICES
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .business-main {
+    width: calc(100% - 64px);
+    margin-left: 64px;
+  }
+
+  .business-content {
+    padding: 18px 10px 24px;
+  }
+}

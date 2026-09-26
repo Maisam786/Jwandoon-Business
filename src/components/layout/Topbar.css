@@ -1,0 +1,400 @@
+/* =========================================================
+   JWANDOON TOPBAR
+   ========================================================= */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  height: var(--topbar-height);
+
+  padding: 0 32px;
+
+  border-bottom: 1px solid var(--color-border);
+
+  background: rgba(255, 255, 255, 0.88);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  box-shadow:
+    0 4px 18px rgba(43, 27, 16, 0.025);
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+.topbar-search {
+  display: flex;
+  align-items: center;
+
+  width: min(420px, 45%);
+
+  min-width: 180px;
+  height: 42px;
+
+  gap: 10px;
+
+  padding: 0 14px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+
+  background: var(--color-background);
+
+  color: var(--color-text-muted);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.topbar-search:focus-within {
+  border-color: rgba(194, 142, 46, 0.45);
+
+  background: var(--color-surface);
+
+  box-shadow:
+    0 0 0 3px rgba(194, 142, 46, 0.08);
+}
+
+.topbar-search svg {
+  flex: 0 0 auto;
+
+  width: 17px;
+  height: 17px;
+
+  stroke-width: 1.8;
+}
+
+.topbar-search input {
+  width: 100%;
+  min-width: 0;
+
+  padding: 0;
+
+  border: 0;
+  outline: none;
+
+  background: transparent;
+  color: var(--color-text);
+
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.topbar-search input::placeholder {
+  color: var(--color-text-muted);
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   NOTIFICATION
+   ========================================================= */
+
+.topbar-icon {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  width: 40px;
+  height: 40px;
+
+  padding: 0;
+
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+
+  background: transparent;
+  color: var(--color-text-secondary);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.topbar-icon:hover {
+  border-color: rgba(194, 142, 46, 0.22);
+
+  background: rgba(194, 142, 46, 0.06);
+
+  color: var(--color-primary);
+
+  transform: translateY(-1px);
+}
+
+.topbar-icon svg {
+  width: 18px;
+  height: 18px;
+
+  stroke-width: 1.8;
+}
+
+.notification-dot {
+  position: absolute;
+
+  top: 8px;
+  right: 8px;
+
+  width: 6px;
+  height: 6px;
+
+  border: 1.5px solid var(--color-surface);
+  border-radius: 50%;
+
+  background: var(--color-primary);
+}
+
+
+/* =========================================================
+   USER MENU
+   ========================================================= */
+
+.user-menu {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: 10px;
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  width: 40px;
+  height: 40px;
+
+  border: 1px solid rgba(194, 142, 46, 0.2);
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(194, 142, 46, 0.14),
+      rgba(194, 142, 46, 0.05)
+    );
+
+  color: var(--color-primary);
+}
+
+.user-avatar svg {
+  width: 18px;
+  height: 18px;
+
+  stroke-width: 1.8;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  gap: 2px;
+}
+
+.user-info strong {
+  display: block;
+
+  max-width: 150px;
+
+  overflow: hidden;
+
+  color: var(--color-text);
+
+  font-size: 12px;
+  font-weight: 800;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-info span {
+  color: var(--color-text-muted);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+.topbar-icon:focus-visible,
+.topbar-search input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .topbar {
+    padding: 0 22px;
+  }
+
+  .topbar-search {
+    width: 48%;
+  }
+
+  .user-info strong {
+    max-width: 120px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .topbar {
+    height: 68px;
+
+    padding: 0 18px;
+  }
+
+  .topbar-search {
+    width: 55%;
+
+    height: 40px;
+  }
+
+  .topbar-actions {
+    gap: 10px;
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .user-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .topbar-icon {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .topbar-search {
+    flex: 1;
+
+    width: auto;
+    min-width: 0;
+
+    max-width: none;
+  }
+
+  .topbar-actions {
+    gap: 7px;
+  }
+
+  .topbar-icon,
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .topbar-icon svg,
+  .user-avatar svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .notification-dot {
+    top: 7px;
+    right: 7px;
+  }
+}
+
+
+/* =========================================================
+   VERY NARROW DEVICES
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .topbar {
+    height: 62px;
+
+    padding: 0 9px;
+  }
+
+  .topbar-search {
+    height: 36px;
+
+    gap: 7px;
+
+    padding: 0 10px;
+  }
+
+  .topbar-search input {
+    font-size: 12px;
+  }
+
+  .topbar-actions {
+    gap: 5px;
+  }
+
+  .topbar-icon,
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .topbar-icon svg,
+  .user-avatar svg {
+    width: 16px;
+    height: 16px;
+  }
+}

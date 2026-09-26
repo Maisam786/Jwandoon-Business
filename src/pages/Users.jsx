@@ -10,6 +10,7 @@ import {
 } from "react-icons/fi";
 
 import { getUsers, createUser, manageUser } from "../services/userService";
+import "./Users.css";
 
 function formatDate(value) {
   if (!value) return "—";

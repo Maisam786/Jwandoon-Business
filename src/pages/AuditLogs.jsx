@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getAuditLogs } from "../services/auditService";
 import { useAuth } from "../context/AuthContext";
+import "./AuditLogs.css";
 
 export default function AuditLogs() {
   const { profile } = useAuth();

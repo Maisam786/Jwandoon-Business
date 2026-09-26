@@ -1,0 +1,1052 @@
+/* =========================================================
+   INVENTORY PAGE
+   ========================================================= */
+
+.inventory-page {
+  width: 100%;
+  min-width: 0;
+}
+
+/* =========================================================
+   PAGE HEADER
+   ========================================================= */
+
+.inventory-page .page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.inventory-page .page-header > div:first-child {
+  min-width: 0;
+}
+
+.inventory-page .page-eyebrow,
+.inventory-page .panel-eyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+}
+
+.inventory-page .page-header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: "Playfair Display", serif;
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.inventory-page .page-header p {
+  max-width: 650px;
+  margin: 9px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   PAGE ACTIONS
+   ========================================================= */
+
+.inventory-page .page-header > div:last-child {
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.primary-business-button,
+.secondary-business-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  gap: 8px;
+  padding: 0 15px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.primary-business-button svg,
+.secondary-business-button svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  stroke-width: 2;
+}
+
+.primary-business-button {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 5px 16px rgba(194, 142, 46, 0.18);
+}
+
+.primary-business-button:hover:not(:disabled) {
+  border-color: var(--color-primary-hover);
+  background: var(--color-primary-hover);
+  box-shadow: 0 7px 20px rgba(194, 142, 46, 0.22);
+  transform: translateY(-1px);
+}
+
+.secondary-business-button {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.secondary-business-button:hover:not(:disabled) {
+  border-color: rgba(194, 142, 46, 0.3);
+  background: rgba(194, 142, 46, 0.055);
+  color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.primary-business-button:disabled,
+.secondary-business-button:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
+}
+
+/* =========================================================
+   ERROR MESSAGE
+   ========================================================= */
+
+.inventory-page .products-error {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid rgba(167, 70, 50, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(167, 70, 50, 0.06);
+  color: var(--color-danger);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   INVENTORY STATS
+   ========================================================= */
+
+.inventory-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.inventory-stat-card {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 14px;
+  padding: 19px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.inventory-stat-card:hover {
+  border-color: rgba(194, 142, 46, 0.18);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.inventory-stat-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(194, 142, 46, 0.14);
+  border-radius: 12px;
+  background: rgba(194, 142, 46, 0.075);
+  color: var(--color-primary);
+}
+
+.inventory-stat-icon svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 1.8;
+}
+
+.inventory-stat-card > div:last-child {
+  min-width: 0;
+}
+
+.inventory-stat-card span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.inventory-stat-card strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inventory-stat-card small {
+  display: block;
+  margin-top: 5px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.inventory-stat-card.warning {
+  border-color: rgba(183, 121, 31, 0.14);
+}
+
+.inventory-stat-card.warning .inventory-stat-icon {
+  border-color: rgba(183, 121, 31, 0.16);
+  background: rgba(183, 121, 31, 0.08);
+  color: var(--color-warning);
+}
+
+/* =========================================================
+   INVENTORY PANEL
+   ========================================================= */
+
+.inventory-panel {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.inventory-panel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.inventory-panel-header > div:first-child {
+  min-width: 0;
+}
+
+.inventory-panel-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: "Playfair Display", serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.inventory-search {
+  display: flex;
+  align-items: center;
+  flex: 0 1 340px;
+  min-width: 220px;
+  height: 40px;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.inventory-search:focus-within {
+  border-color: rgba(194, 142, 46, 0.42);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(194, 142, 46, 0.075);
+}
+
+.inventory-search svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.8;
+}
+
+.inventory-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 12px;
+}
+
+.inventory-search input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* =========================================================
+   INVENTORY TABLE
+   ========================================================= */
+
+.inventory-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.inventory-table-wrapper::-webkit-scrollbar {
+  height: 7px;
+}
+
+.inventory-table-wrapper::-webkit-scrollbar-track {
+  background: var(--color-surface-soft);
+}
+
+.inventory-table-wrapper::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(109, 76, 49, 0.22);
+}
+
+.inventory-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.inventory-table th {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(243, 235, 224, 0.42);
+  color: var(--color-text-muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.inventory-table td {
+  padding: 15px 18px;
+  border-bottom: 1px solid rgba(43, 27, 16, 0.055);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.inventory-table tbody tr {
+  transition: background 0.18s ease;
+}
+
+.inventory-table tbody tr:hover {
+  background: rgba(194, 142, 46, 0.025);
+}
+
+.inventory-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.inventory-table td:first-child,
+.inventory-table th:first-child {
+  padding-left: 22px;
+}
+
+.inventory-table td:last-child,
+.inventory-table th:last-child {
+  padding-right: 22px;
+}
+
+.inventory-table .product-number {
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.inventory-product {
+  min-width: 190px;
+}
+
+.inventory-product strong {
+  display: block;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.inventory-table .stock-number {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   STOCK STATUS
+   ========================================================= */
+
+.stock-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 25px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.stock-status.in-stock {
+  border: 1px solid rgba(74, 114, 75, 0.14);
+  background: rgba(74, 114, 75, 0.08);
+  color: var(--color-success);
+}
+
+.stock-status.low-stock {
+  border: 1px solid rgba(183, 121, 31, 0.16);
+  background: rgba(183, 121, 31, 0.09);
+  color: var(--color-warning);
+}
+
+.stock-status.out-of-stock {
+  border: 1px solid rgba(167, 70, 50, 0.15);
+  background: rgba(167, 70, 50, 0.075);
+  color: var(--color-danger);
+}
+
+/* =========================================================
+   TABLE MESSAGE / EMPTY STATE
+   ========================================================= */
+
+.products-table-message {
+  height: 110px;
+  color: var(--color-text-muted) !important;
+  font-size: 12px !important;
+  text-align: center;
+}
+
+.inventory-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 190px;
+  padding: 30px 20px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.inventory-empty svg {
+  width: 25px;
+  height: 25px;
+  margin-bottom: 10px;
+  color: var(--color-text-muted);
+  stroke-width: 1.6;
+}
+
+.inventory-empty h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: "Playfair Display", serif;
+  font-size: 18px;
+}
+
+.inventory-empty p {
+  margin: 7px 0 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+/* =========================================================
+   BUSINESS MODAL
+   ========================================================= */
+
+.business-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100dvh;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(43, 27, 16, 0.48);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  animation: inventoryOverlayIn 0.18s ease-out;
+}
+
+.business-modal {
+  width: min(100%, 540px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  border: 1px solid rgba(43, 27, 16, 0.08);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: 0 24px 70px rgba(43, 27, 16, 0.2);
+  animation: inventoryModalIn 0.22s ease-out;
+}
+
+.business-modal::-webkit-scrollbar {
+  width: 7px;
+}
+
+.business-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.business-modal::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: rgba(109, 76, 49, 0.2);
+}
+
+.business-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 23px 24px 19px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.business-modal-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: "Playfair Display", serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.modal-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.modal-close:hover:not(:disabled) {
+  border-color: rgba(167, 70, 50, 0.18);
+  background: rgba(167, 70, 50, 0.06);
+  color: var(--color-danger);
+  transform: rotate(2deg);
+}
+
+.modal-close svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.8;
+}
+
+/* =========================================================
+   BUSINESS FORM
+   ========================================================= */
+
+.business-modal form {
+  padding: 22px 24px 24px;
+}
+
+.business-form-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 7px;
+  margin-bottom: 17px;
+}
+
+.business-form-group label {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.business-form-group input,
+.business-form-group select,
+.business-form-group textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 12px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.business-form-group input,
+.business-form-group select {
+  height: 42px;
+  padding: 0 12px;
+}
+
+.business-form-group textarea {
+  min-height: 96px;
+  padding: 11px 12px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.business-form-group input::placeholder,
+.business-form-group textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.business-form-group input:hover,
+.business-form-group select:hover,
+.business-form-group textarea:hover {
+  border-color: rgba(109, 76, 49, 0.24);
+}
+
+.business-form-group input:focus,
+.business-form-group select:focus,
+.business-form-group textarea:focus {
+  border-color: rgba(194, 142, 46, 0.55);
+  outline: 0;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(194, 142, 46, 0.075);
+}
+
+.business-form-group small {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.business-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* =========================================================
+   STOCK INFORMATION NOTE
+   ========================================================= */
+
+.stock-receive-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 0 20px;
+  padding: 12px 13px;
+  border: 1px solid rgba(194, 142, 46, 0.14);
+  border-radius: 11px;
+  background: rgba(194, 142, 46, 0.055);
+  color: var(--color-text-secondary);
+}
+
+.stock-receive-note svg {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  color: var(--color-primary);
+  stroke-width: 1.8;
+}
+
+.stock-receive-note p {
+  min-width: 0;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.stock-receive-note p strong {
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+/* =========================================================
+   MODAL ACTIONS
+   ========================================================= */
+
+.business-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 3px;
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes inventoryOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes inventoryModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .inventory-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inventory-page .page-header {
+    align-items: flex-start;
+  }
+
+  .inventory-panel-header {
+    align-items: flex-start;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .inventory-page .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 17px;
+    margin-bottom: 21px;
+  }
+
+  .inventory-page .page-header > div:last-child {
+    width: 100%;
+  }
+
+  .inventory-page .page-header > div:last-child .primary-business-button,
+  .inventory-page .page-header > div:last-child .secondary-business-button {
+    flex: 1 1 180px;
+  }
+
+  .inventory-stats {
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .inventory-stat-card {
+    padding: 16px;
+  }
+
+  .inventory-panel {
+    border-radius: var(--radius-lg);
+  }
+
+  .inventory-panel-header {
+    flex-direction: column;
+    gap: 15px;
+    padding: 18px 16px 16px;
+  }
+
+  .inventory-search {
+    width: 100%;
+    flex: none;
+  }
+
+  .inventory-table {
+    min-width: 720px;
+  }
+
+  .inventory-table th {
+    padding: 12px 14px;
+  }
+
+  .inventory-table td {
+    padding: 13px 14px;
+  }
+
+  .inventory-table td:first-child,
+  .inventory-table th:first-child {
+    padding-left: 16px;
+  }
+
+  .inventory-table td:last-child,
+  .inventory-table th:last-child {
+    padding-right: 16px;
+  }
+
+  .business-modal-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .business-modal {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    border-radius: 20px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 520px) {
+  .inventory-page .page-header h1 {
+    font-size: 29px;
+  }
+
+  .inventory-page .page-header p {
+    font-size: 12px;
+  }
+
+  .inventory-page .page-header > div:last-child {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+
+  .inventory-page .page-header > div:last-child .primary-business-button,
+  .inventory-page .page-header > div:last-child .secondary-business-button {
+    width: 100%;
+    min-width: 0;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .inventory-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-stat-card {
+    min-height: 88px;
+  }
+
+  .inventory-stat-card strong {
+    font-size: 19px;
+  }
+
+  .inventory-panel-header h2 {
+    font-size: 20px;
+  }
+
+  .business-modal-header {
+    padding: 19px 17px 16px;
+  }
+
+  .business-modal-header h2 {
+    font-size: 21px;
+  }
+
+  .business-modal form {
+    padding: 18px 17px 20px;
+  }
+
+  .business-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .business-modal-actions {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .business-modal-actions .primary-business-button,
+  .business-modal-actions .secondary-business-button {
+    width: 100%;
+  }
+
+  .stock-receive-note {
+    margin-bottom: 18px;
+  }
+}
+
+/* =========================================================
+   VERY NARROW DEVICES
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .inventory-page .page-header h1 {
+    font-size: 26px;
+  }
+
+  .inventory-page .page-header p {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .inventory-page .page-header > div:last-child {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-page .page-header > div:last-child .primary-business-button,
+  .inventory-page .page-header > div:last-child .secondary-business-button {
+    min-height: 38px;
+  }
+
+  .inventory-stat-card {
+    gap: 11px;
+    padding: 14px;
+  }
+
+  .inventory-stat-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .inventory-stat-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .inventory-stat-card span {
+    font-size: 9px;
+  }
+
+  .inventory-stat-card strong {
+    font-size: 18px;
+  }
+
+  .inventory-stat-card small {
+    font-size: 9px;
+  }
+
+  .inventory-panel-header {
+    padding: 16px 13px 14px;
+  }
+
+  .inventory-panel-header h2 {
+    font-size: 19px;
+  }
+
+  .inventory-search {
+    height: 38px;
+    padding: 0 10px;
+  }
+
+  .inventory-search input {
+    font-size: 11px;
+  }
+
+  .business-modal-overlay {
+    padding: 7px;
+  }
+
+  .business-modal {
+    max-height: calc(100dvh - 14px);
+    border-radius: 17px;
+  }
+
+  .business-modal-header {
+    gap: 10px;
+    padding: 17px 13px 14px;
+  }
+
+  .business-modal-header h2 {
+    font-size: 20px;
+  }
+
+  .business-modal form {
+    padding: 16px 13px 17px;
+  }
+
+  .business-form-group {
+    margin-bottom: 15px;
+  }
+
+  .business-form-group input,
+  .business-form-group select {
+    height: 40px;
+    font-size: 11px;
+  }
+
+  .business-form-group textarea {
+    font-size: 11px;
+  }
+
+  .stock-receive-note {
+    padding: 10px;
+  }
+
+  .stock-receive-note p {
+    font-size: 9px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-stat-card,
+  .primary-business-button,
+  .secondary-business-button,
+  .modal-close,
+  .business-modal-overlay,
+  .business-modal {
+    transition: none;
+    animation: none;
+  }
+}

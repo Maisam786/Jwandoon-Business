@@ -10,6 +10,7 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
+import "./Products.css";
 
 import {
   createProduct,
