@@ -6,6 +6,7 @@ import {
   FiMail,
   FiShield,
 } from "react-icons/fi";
+import "./AcceptInvite.css";
 
 import { supabase } from "../services/supabase";
 
