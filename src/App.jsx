@@ -9,11 +9,30 @@ import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
 import AuditLogs from "./pages/AuditLogs";
+import AcceptInvite from "./pages/AcceptInvite";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 import "./App.css";
 import "./index.css";
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
+  );
+}
+
+function AppRouter() {
+  const pathname = window.location.pathname;
+
+  if (pathname === "/accept-invite") {
+    return <AcceptInvite />;
+  }
+
+  return <ProtectedApp />;
+}
 
 function ProtectedApp() {
   const { profile, loading, isAuthenticated, otpRequired } = useAuth();
@@ -344,13 +363,5 @@ function OtpScreen() {
         </p>
       </div>
     </main>
-  );
-}
-
-export default function App() {
-  return (
-    <AuthProvider>
-      <ProtectedApp />
-    </AuthProvider>
   );
 }
