@@ -1,6 +1,10 @@
 import { supabase } from "./supabase";
 
-function formatLocalDate(date) {
+/* =========================================================
+   DATE HELPERS
+   ========================================================= */
+
+function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -8,16 +12,71 @@ function formatLocalDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-function getDateRange(range, customStart, customEnd) {
-  const now = new Date();
+/**
+ * Get today's date according to Pakistan time.
+ * This prevents the user's browser timezone from affecting
+ * Today / This Week / This Month reports.
+ */
+function getPakistanToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Karachi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const values = {};
+
+  for (const part of parts) {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  }
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+  };
+}
+
+/**
+ * Convert a YYYY-MM-DD string into a local Date object.
+ *
+ * We intentionally avoid:
+ * new Date("YYYY-MM-DD")
+ *
+ * because JavaScript treats that format as UTC, which can
+ * cause the date to shift depending on the browser timezone.
+ */
+function dateFromParts(year, month, day) {
+  return new Date(year, month - 1, day);
+}
+
+/* =========================================================
+   REPORT DATE RANGE
+   ========================================================= */
+
+function getDateRange(
+  range,
+  customStart,
+  customEnd
+) {
+  /* -------------------------
+     CUSTOM RANGE
+     ------------------------- */
 
   if (range === "custom") {
     if (!customStart || !customEnd) {
-      throw new Error("Please select both custom dates.");
+      throw new Error(
+        "Please select both custom dates."
+      );
     }
 
     if (customEnd < customStart) {
-      throw new Error("End date cannot be before start date.");
+      throw new Error(
+        "End date cannot be before start date."
+      );
     }
 
     return {
@@ -26,118 +85,218 @@ function getDateRange(range, customStart, customEnd) {
     };
   }
 
-  const today = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate()
+  /* -------------------------
+     PAKISTAN TODAY
+     ------------------------- */
+
+  const pakistanToday = getPakistanToday();
+
+  const today = dateFromParts(
+    pakistanToday.year,
+    pakistanToday.month,
+    pakistanToday.day
   );
 
-  let startDate = today;
+  let startDate = new Date(today);
+
+  /* -------------------------
+     THIS WEEK
+     Monday → Today
+     ------------------------- */
 
   if (range === "week") {
-    const day = today.getDay();
+    const dayOfWeek = today.getDay();
 
-    const daysSinceMonday = day === 0 ? 6 : day - 1;
+    /*
+      JavaScript:
+      Sunday    = 0
+      Monday    = 1
+      Tuesday   = 2
+      Wednesday = 3
+      Thursday  = 4
+      Friday    = 5
+      Saturday  = 6
+    */
+
+    const daysSinceMonday =
+      dayOfWeek === 0
+        ? 6
+        : dayOfWeek - 1;
 
     startDate = new Date(today);
+
     startDate.setDate(
       today.getDate() - daysSinceMonday
     );
   }
 
+  /* -------------------------
+     THIS MONTH
+     ------------------------- */
+
   if (range === "month") {
-    startDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
+    startDate = dateFromParts(
+      pakistanToday.year,
+      pakistanToday.month,
       1
     );
   }
 
   return {
-    startDate: formatLocalDate(startDate),
-    endDate: formatLocalDate(today),
+    startDate: formatDate(startDate),
+    endDate: formatDate(today),
   };
 }
 
+/* =========================================================
+   PAKISTAN TIME → UTC
+   ========================================================= */
+
+/**
+ * Start of a Pakistan calendar day.
+ *
+ * Pakistan = UTC+05:00
+ */
 function toPakistanStartOfDay(dateString) {
   return new Date(
     `${dateString}T00:00:00+05:00`
   ).toISOString();
 }
 
+/**
+ * End of a Pakistan calendar day.
+ *
+ * Pakistan = UTC+05:00
+ */
 function toPakistanEndOfDay(dateString) {
   return new Date(
     `${dateString}T23:59:59.999+05:00`
   ).toISOString();
 }
 
+/* =========================================================
+   MAIN REPORT FUNCTION
+   ========================================================= */
+
 export async function getReportData({
   range = "today",
   customStart = "",
   customEnd = "",
 }) {
-  const { startDate, endDate } = getDateRange(
+  /* -------------------------
+     Calculate date range
+     ------------------------- */
+
+  const {
+    startDate,
+    endDate,
+  } = getDateRange(
     range,
     customStart,
     customEnd
   );
 
-  const { data, error } = await supabase.rpc(
+  const startUTC =
+    toPakistanStartOfDay(startDate);
+
+  const endUTC =
+    toPakistanEndOfDay(endDate);
+
+  /* -------------------------
+     Debug information
+     ------------------------- */
+
+  console.log(
+    "REPORT DATE RANGE:",
+    {
+      range,
+      startDate,
+      endDate,
+      startUTC,
+      endUTC,
+    }
+  );
+
+  /* -------------------------
+     Get report from Supabase
+     ------------------------- */
+
+  const {
+    data,
+    error,
+  } = await supabase.rpc(
     "get_reports",
     {
-      p_start_date:
-        toPakistanStartOfDay(startDate),
-
-      p_end_date:
-        toPakistanEndOfDay(endDate),
+      p_start_date: startUTC,
+      p_end_date: endUTC,
     }
   );
 
   if (error) {
+    console.error(
+      "REPORT ERROR:",
+      error
+    );
+
     throw error;
   }
 
+  /* -------------------------
+     Normalize response
+     ------------------------- */
+
   const report = data || {};
 
-  return {
-    summary: {
-      totalSales: Number(
-        report.totalSales || 0
-      ),
+  /* -------------------------
+     Summary
+     ------------------------- */
 
-      totalCost: Number(
-        report.totalCost || 0
-      ),
+  const summary = {
+    totalSales: Number(
+      report.totalSales || 0
+    ),
 
-      totalProfit: Number(
-        report.totalProfit || 0
-      ),
+    totalCost: Number(
+      report.totalCost || 0
+    ),
 
-      totalUnits: Number(
-        report.totalUnits || 0
-      ),
+    totalProfit: Number(
+      report.totalProfit || 0
+    ),
 
-      invoices: Number(
-        report.invoices || 0
-      ),
+    totalUnits: Number(
+      report.totalUnits || 0
+    ),
 
-      averageInvoice: Number(
-        report.averageInvoice || 0
-      ),
-    },
+    invoices: Number(
+      report.invoices || 0
+    ),
 
-    salesTrend: Array.isArray(
-      report.salesTrend
-    )
+    averageInvoice: Number(
+      report.averageInvoice || 0
+    ),
+  };
+
+  /* -------------------------
+     Sales trend
+     ------------------------- */
+
+  const salesTrend =
+    Array.isArray(report.salesTrend)
       ? report.salesTrend
-      : [],
+      : [];
 
-    topProducts: Array.isArray(
-      report.topProducts
-    )
+  /* -------------------------
+     Top products
+     ------------------------- */
+
+  const topProducts =
+    Array.isArray(report.topProducts)
       ? report.topProducts.map(
           (product) => ({
-            product_id: product.product_id,
+            product_id:
+              product.product_id,
+
             product_name:
               product.product_name,
 
@@ -149,22 +308,42 @@ export async function getReportData({
               product.sales || 0
             ),
 
-            profit: 0,
+            profit: Number(
+              product.profit || 0
+            ),
           })
         )
-      : [],
+      : [];
 
-    lowStockProducts:
-      Array.isArray(
-        report.lowStockProducts
-      )
-        ? report.lowStockProducts
-        : [],
+  /* -------------------------
+     Low stock products
+     ------------------------- */
 
-    sales: Array.isArray(
-      report.recentSales
+  const lowStockProducts =
+    Array.isArray(
+      report.lowStockProducts
     )
+      ? report.lowStockProducts
+      : [];
+
+  /* -------------------------
+     Recent sales
+     ------------------------- */
+
+  const sales =
+    Array.isArray(report.recentSales)
       ? report.recentSales
-      : [],
+      : [];
+
+  /* -------------------------
+     Final report
+     ------------------------- */
+
+  return {
+    summary,
+    salesTrend,
+    topProducts,
+    lowStockProducts,
+    sales,
   };
 }
