@@ -13,7 +13,6 @@
 
   width: 100%;
   height: var(--topbar-height);
-
   padding: 0 32px;
 
   border-bottom: 1px solid var(--color-border);
@@ -23,10 +22,8 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 
-  box-shadow:
-    0 4px 18px rgba(43, 27, 16, 0.025);
+  box-shadow: 0 4px 18px rgba(43, 27, 16, 0.025);
 }
-
 
 /* =========================================================
    SEARCH
@@ -37,19 +34,16 @@
   align-items: center;
 
   width: min(420px, 45%);
-
   min-width: 180px;
   height: 42px;
 
   gap: 10px;
-
   padding: 0 14px;
 
   border: 1px solid var(--color-border);
   border-radius: 11px;
 
   background: var(--color-background);
-
   color: var(--color-text-muted);
 
   transition:
@@ -63,8 +57,7 @@
 
   background: var(--color-surface);
 
-  box-shadow:
-    0 0 0 3px rgba(194, 142, 46, 0.08);
+  box-shadow: 0 0 0 3px rgba(194, 142, 46, 0.08);
 }
 
 .topbar-search svg {
@@ -96,7 +89,6 @@
   color: var(--color-text-muted);
 }
 
-
 /* =========================================================
    ACTIONS
    ========================================================= */
@@ -106,14 +98,17 @@
   align-items: center;
 
   gap: 18px;
-
   min-width: 0;
 }
 
-
 /* =========================================================
-   NOTIFICATION
+   NOTIFICATION BUTTON
    ========================================================= */
+
+.notification-wrapper {
+  position: relative;
+  flex: 0 0 auto;
+}
 
 .topbar-icon {
   position: relative;
@@ -125,7 +120,6 @@
 
   width: 40px;
   height: 40px;
-
   padding: 0;
 
   border: 1px solid var(--color-border);
@@ -141,7 +135,8 @@
     transform 0.2s ease;
 }
 
-.topbar-icon:hover {
+.topbar-icon:hover,
+.topbar-icon-active {
   border-color: rgba(194, 142, 46, 0.22);
 
   background: rgba(194, 142, 46, 0.06);
@@ -158,25 +153,432 @@
   stroke-width: 1.8;
 }
 
-.notification-dot {
+/* =========================================================
+   NOTIFICATION BADGE
+   ========================================================= */
+
+.notification-badge {
   position: absolute;
 
-  top: 8px;
-  right: 8px;
+  top: -5px;
+  right: -5px;
+
+  display: grid;
+  place-items: center;
+
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+
+  border: 2px solid var(--color-surface);
+  border-radius: 999px;
+
+  background: var(--color-danger);
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+
+  box-shadow:
+    0 3px 8px rgba(167, 70, 50, 0.25);
+
+  animation: notificationBadgeIn 0.2s ease-out;
+}
+
+@keyframes notificationBadgeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* =========================================================
+   NOTIFICATION DROPDOWN
+   ========================================================= */
+
+.notification-dropdown {
+  position: absolute;
+
+  top: calc(100% + 12px);
+  right: -8px;
+
+  z-index: 120;
+
+  width: 370px;
+  max-width: calc(100vw - 24px);
+
+  overflow: hidden;
+
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  box-shadow:
+    0 18px 50px rgba(43, 27, 16, 0.12),
+    0 4px 12px rgba(43, 27, 16, 0.04);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  animation: notificationDropdownIn 0.18s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes notificationDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   NOTIFICATION HEADER
+   ========================================================= */
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding: 17px 18px 15px;
+
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notification-header > div {
+  min-width: 0;
+}
+
+.notification-header h3 {
+  margin: 0 0 3px;
+
+  color: var(--color-text);
+
+  font-family: "Playfair Display", serif;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.notification-header span {
+  color: var(--color-text-muted);
+
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.notification-mark-read {
+  flex: 0 0 auto;
+
+  padding: 6px 8px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: rgba(194, 142, 46, 0.07);
+  color: var(--color-primary-hover);
+
+  font-size: 9px;
+  font-weight: 800;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.notification-mark-read:hover {
+  background: rgba(194, 142, 46, 0.13);
+  color: var(--color-primary);
+}
+
+/* =========================================================
+   NOTIFICATION LIST
+   ========================================================= */
+
+.notification-list {
+  max-height: 390px;
+
+  overflow-y: auto;
+
+  overscroll-behavior: contain;
+}
+
+.notification-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(43, 27, 16, 0.12);
+}
+
+/* =========================================================
+   NOTIFICATION ITEM
+   ========================================================= */
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+
+  width: 100%;
+
+  gap: 12px;
+  padding: 14px 17px;
+
+  border: 0;
+  border-bottom: 1px solid rgba(43, 27, 16, 0.055);
+
+  background: transparent;
+  color: inherit;
+
+  text-align: left;
+
+  transition:
+    background 0.18s ease;
+}
+
+.notification-item:last-child {
+  border-bottom: 0;
+}
+
+.notification-item:hover {
+  background: rgba(194, 142, 46, 0.045);
+}
+
+.notification-item-unread {
+  background: rgba(194, 142, 46, 0.035);
+}
+
+.notification-item-unread:hover {
+  background: rgba(194, 142, 46, 0.065);
+}
+
+/* =========================================================
+   NOTIFICATION ICON
+   ========================================================= */
+
+.notification-item-icon {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  width: 36px;
+  height: 36px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+}
+
+.notification-item-icon svg {
+  width: 16px;
+  height: 16px;
+
+  stroke-width: 1.8;
+}
+
+.notification-type-stock {
+  color: var(--color-info);
+  background: rgba(91, 113, 132, 0.07);
+  border-color: rgba(91, 113, 132, 0.12);
+}
+
+.notification-type-sale {
+  color: var(--color-primary);
+  background: rgba(194, 142, 46, 0.08);
+  border-color: rgba(194, 142, 46, 0.14);
+}
+
+.notification-type-warning {
+  color: var(--color-warning);
+  background: rgba(183, 121, 31, 0.07);
+  border-color: rgba(183, 121, 31, 0.13);
+}
+
+.notification-type-success {
+  color: var(--color-success);
+  background: rgba(74, 114, 75, 0.07);
+  border-color: rgba(74, 114, 75, 0.13);
+}
+
+/* =========================================================
+   NOTIFICATION CONTENT
+   ========================================================= */
+
+.notification-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-item-top {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.notification-item-top strong {
+  overflow: hidden;
+
+  color: var(--color-text);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-item-unread
+  .notification-item-top
+  strong {
+  font-weight: 800;
+}
+
+.notification-unread-dot {
+  flex: 0 0 auto;
 
   width: 6px;
   height: 6px;
 
-  border: 1.5px solid var(--color-surface);
   border-radius: 50%;
 
   background: var(--color-primary);
 }
 
+.notification-item p {
+  margin: 4px 0 6px;
+
+  color: var(--color-text-secondary);
+
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.notification-time {
+  color: var(--color-text-muted);
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.notification-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+
+  padding: 38px 20px;
+
+  text-align: center;
+}
+
+.notification-empty-icon {
+  display: grid;
+  place-items: center;
+
+  width: 46px;
+  height: 46px;
+  margin-bottom: 12px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+
+  background: var(--color-background);
+  color: var(--color-text-muted);
+}
+
+.notification-empty-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.notification-empty strong {
+  margin-bottom: 4px;
+
+  color: var(--color-text);
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.notification-empty span {
+  max-width: 220px;
+
+  color: var(--color-text-muted);
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   NOTIFICATION FOOTER
+   ========================================================= */
+
+.notification-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 11px 18px;
+
+  border-top: 1px solid var(--color-border);
+
+  background: rgba(243, 235, 224, 0.42);
+}
+
+.notification-footer span {
+  color: var(--color-text-secondary);
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 0.13em;
+}
+
+.notification-footer small {
+  color: var(--color-text-muted);
+
+  font-size: 8px;
+  font-weight: 600;
+}
 
 /* =========================================================
    USER MENU
    ========================================================= */
+
+.user-menu-wrapper {
+  position: relative;
+  flex: 0 0 auto;
+}
 
 .user-menu {
   display: flex;
@@ -185,6 +587,29 @@
   min-width: 0;
 
   gap: 10px;
+  padding: 5px 7px 5px 5px;
+
+  border: 1px solid transparent;
+  border-radius: 13px;
+
+  background: transparent;
+  color: inherit;
+
+  text-align: left;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.user-menu:hover,
+.user-menu-active {
+  border-color: rgba(194, 142, 46, 0.14);
+
+  background: rgba(194, 142, 46, 0.045);
+
+  box-shadow: 0 4px 14px rgba(43, 27, 16, 0.035);
 }
 
 .user-avatar {
@@ -207,6 +632,22 @@
     );
 
   color: var(--color-primary);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.user-menu:hover .user-avatar,
+.user-menu-active .user-avatar {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(194, 142, 46, 0.2),
+      rgba(194, 142, 46, 0.08)
+    );
+
+  transform: scale(1.02);
 }
 
 .user-avatar svg {
@@ -250,17 +691,289 @@
   letter-spacing: 0.12em;
 }
 
+.user-menu-chevron {
+  flex: 0 0 auto;
+
+  width: 14px;
+  height: 14px;
+
+  color: var(--color-text-muted);
+
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.user-menu-active .user-menu-chevron {
+  color: var(--color-primary);
+  transform: rotate(180deg);
+}
+
+/* =========================================================
+   ACCOUNT DROPDOWN
+   ========================================================= */
+
+.account-dropdown {
+  position: absolute;
+
+  top: calc(100% + 12px);
+  right: 0;
+
+  z-index: 120;
+
+  width: 310px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  box-shadow:
+    0 18px 50px rgba(43, 27, 16, 0.12),
+    0 4px 12px rgba(43, 27, 16, 0.04);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  animation: accountDropdownIn 0.18s ease-out;
+
+  transform-origin: top right;
+}
+
+@keyframes accountDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.account-dropdown-header {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 18px;
+}
+
+.account-large-avatar {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  width: 48px;
+  height: 48px;
+
+  border: 1px solid rgba(194, 142, 46, 0.2);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(194, 142, 46, 0.16),
+      rgba(194, 142, 46, 0.05)
+    );
+
+  color: var(--color-primary);
+}
+
+.account-large-avatar svg {
+  width: 21px;
+  height: 21px;
+
+  stroke-width: 1.7;
+}
+
+.account-header-info {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  gap: 4px;
+}
+
+.account-header-info strong {
+  overflow: hidden;
+
+  color: var(--color-text);
+
+  font-family: "Playfair Display", serif;
+
+  font-size: 17px;
+  font-weight: 700;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-header-info span {
+  align-self: flex-start;
+
+  padding: 4px 8px;
+
+  border: 1px solid rgba(194, 142, 46, 0.16);
+  border-radius: 6px;
+
+  background: rgba(194, 142, 46, 0.07);
+
+  color: var(--color-primary-hover);
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.account-divider {
+  height: 1px;
+  margin: 0 18px;
+
+  background: var(--color-border);
+}
+
+.account-details {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+
+  padding: 10px 12px;
+}
+
+.account-detail {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  min-width: 0;
+
+  padding: 10px 7px;
+
+  border-radius: 10px;
+
+  transition: background 0.18s ease;
+}
+
+.account-detail:hover {
+  background: rgba(194, 142, 46, 0.045);
+}
+
+.account-detail-icon {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  width: 32px;
+  height: 32px;
+
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+
+  background: var(--color-background);
+
+  color: var(--color-text-secondary);
+}
+
+.account-detail-icon svg {
+  width: 15px;
+  height: 15px;
+
+  stroke-width: 1.8;
+}
+
+.account-status-icon {
+  color: var(--color-success);
+
+  background: rgba(74, 114, 75, 0.055);
+
+  border-color: rgba(74, 114, 75, 0.12);
+}
+
+.account-detail > div:last-child {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  gap: 2px;
+}
+
+.account-detail span {
+  color: var(--color-text-muted);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.04em;
+}
+
+.account-detail strong {
+  max-width: 210px;
+
+  overflow: hidden;
+
+  color: var(--color-text);
+
+  font-size: 11px;
+  font-weight: 800;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-dropdown-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding: 12px 18px;
+
+  border-top: 1px solid var(--color-border);
+
+  background: rgba(243, 235, 224, 0.42);
+}
+
+.account-dropdown-footer span {
+  color: var(--color-text-secondary);
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 0.13em;
+}
+
+.account-dropdown-footer small {
+  color: var(--color-text-muted);
+
+  font-size: 8px;
+  font-weight: 600;
+}
 
 /* =========================================================
    FOCUS
    ========================================================= */
 
 .topbar-icon:focus-visible,
-.topbar-search input:focus-visible {
+.topbar-search input:focus-visible,
+.user-menu:focus-visible,
+.notification-mark-read:focus-visible,
+.notification-item:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
-
 
 /* =========================================================
    TABLET
@@ -280,7 +993,6 @@
   }
 }
 
-
 /* =========================================================
    MOBILE
    ========================================================= */
@@ -288,13 +1000,11 @@
 @media (max-width: 760px) {
   .topbar {
     height: 68px;
-
     padding: 0 18px;
   }
 
   .topbar-search {
     width: 55%;
-
     height: 40px;
   }
 
@@ -306,17 +1016,36 @@
     display: none;
   }
 
+  .user-menu {
+    padding: 2px;
+  }
+
   .user-avatar {
     width: 38px;
     height: 38px;
+  }
+
+  .user-menu-chevron {
+    display: none;
   }
 
   .topbar-icon {
     width: 38px;
     height: 38px;
   }
-}
 
+  .notification-dropdown {
+    right: -5px;
+
+    width: 350px;
+    max-width: calc(100vw - 24px);
+  }
+
+  .account-dropdown {
+    width: 300px;
+    max-width: calc(100vw - 24px);
+  }
+}
 
 /* =========================================================
    SMALL MOBILE
@@ -332,7 +1061,6 @@
 
     width: auto;
     min-width: 0;
-
     max-width: none;
   }
 
@@ -352,12 +1080,40 @@
     height: 17px;
   }
 
-  .notification-dot {
-    top: 7px;
-    right: 7px;
+  .notification-badge {
+    top: -4px;
+    right: -4px;
+
+    min-width: 17px;
+    height: 17px;
+
+    font-size: 7px;
+  }
+
+  .notification-dropdown {
+    top: calc(100% + 9px);
+    right: -5px;
+
+    width: min(350px, calc(100vw - 18px));
+
+    border-radius: 14px;
+  }
+
+  .notification-header {
+    padding: 15px;
+  }
+
+  .notification-item {
+    padding: 13px 14px;
+  }
+
+  .account-dropdown {
+    top: calc(100% + 9px);
+    right: -2px;
+
+    width: min(300px, calc(100vw - 18px));
   }
 }
-
 
 /* =========================================================
    VERY NARROW DEVICES
@@ -366,7 +1122,6 @@
 @media (max-width: 380px) {
   .topbar {
     height: 62px;
-
     padding: 0 9px;
   }
 
@@ -374,7 +1129,6 @@
     height: 36px;
 
     gap: 7px;
-
     padding: 0 10px;
   }
 
@@ -396,5 +1150,99 @@
   .user-avatar svg {
     width: 16px;
     height: 16px;
+  }
+
+  .notification-dropdown {
+    right: -4px;
+
+    width: calc(100vw - 14px);
+
+    border-radius: 13px;
+  }
+
+  .notification-header {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 9px;
+  }
+
+  .notification-mark-read {
+    width: 100%;
+  }
+
+  .notification-list {
+    max-height: 340px;
+  }
+
+  .notification-item-icon {
+    width: 33px;
+    height: 33px;
+  }
+
+  .notification-item p {
+    font-size: 9px;
+  }
+
+  .notification-footer {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 3px;
+  }
+
+  .account-dropdown {
+    right: -3px;
+
+    width: min(290px, calc(100vw - 14px));
+
+    border-radius: 14px;
+  }
+
+  .account-dropdown-header {
+    padding: 15px;
+  }
+
+  .account-large-avatar {
+    width: 43px;
+    height: 43px;
+  }
+
+  .account-header-info strong {
+    font-size: 15px;
+  }
+
+  .account-detail strong {
+    max-width: 180px;
+  }
+
+  .account-dropdown-footer {
+    align-items: flex-start;
+    flex-direction: column;
+
+    gap: 3px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-badge,
+  .notification-dropdown,
+  .account-dropdown {
+    animation: none;
+  }
+
+  .topbar-search,
+  .topbar-icon,
+  .user-menu,
+  .user-avatar,
+  .user-menu-chevron,
+  .account-detail,
+  .notification-item,
+  .notification-mark-read {
+    transition: none;
   }
 }

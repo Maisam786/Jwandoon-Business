@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { emitNotification } from "./notificationService";
 
 export async function getUsers() {
   const { data, error } = await supabase
@@ -13,21 +14,14 @@ export async function getUsers() {
   return data ?? [];
 }
 
-export async function createUser({
-  fullName,
-  email,
-  role,
-}) {
-  const { data, error } = await supabase.functions.invoke(
-    "create-user",
-    {
-      body: {
-        fullName: fullName.trim(),
-        email: email.trim(),
-        role,
-      },
+export async function createUser({ fullName, email, role }) {
+  const { data, error } = await supabase.functions.invoke("create-user", {
+    body: {
+      fullName: fullName.trim(),
+      email: email.trim(),
+      role,
     },
-  );
+  });
 
   if (error) {
     throw error;
@@ -36,25 +30,24 @@ export async function createUser({
   if (data?.error) {
     throw new Error(data.error);
   }
+
+  emitNotification({
+    type: "info",
+    title: "User invitation created",
+    message: `An invitation was created for ${email.trim()}.`,
+  });
 
   return data;
 }
 
-export async function manageUser({
-  userId,
-  action,
-  role,
-}) {
-  const { data, error } = await supabase.functions.invoke(
-    "manage-user",
-    {
-      body: {
-        userId,
-        action,
-        ...(role ? { role } : {}),
-      },
+export async function manageUser({ userId, action, role }) {
+  const { data, error } = await supabase.functions.invoke("manage-user", {
+    body: {
+      userId,
+      action,
+      ...(role ? { role } : {}),
     },
-  );
+  });
 
   if (error) {
     throw error;
@@ -63,6 +56,18 @@ export async function manageUser({
   if (data?.error) {
     throw new Error(data.error);
   }
+
+  const actionMessages = {
+    activate: "User account activated.",
+    deactivate: "User account deactivated.",
+    change_role: role ? `User role changed to ${role}.` : "User role updated.",
+  };
+
+  emitNotification({
+    type: action === "deactivate" ? "warning" : "success",
+    title: "User account updated",
+    message: actionMessages[action] || "A user account was updated.",
+  });
 
   return data;
 }

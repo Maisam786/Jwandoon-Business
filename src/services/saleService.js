@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { emitNotification } from "./notificationService";
 
 export async function createSale({
   invoiceNumber,
@@ -29,6 +30,23 @@ export async function createSale({
     throw error;
   }
 
+  /*
+    The database trigger now creates the persistent
+    notification.
+
+    Keep the local notification for instant UI feedback.
+    The notification ID is intentionally omitted here because
+    the database-generated notification arrives separately
+    through Realtime.
+  */
+  emitNotification({
+    type: "sale",
+    title: "New sale recorded",
+    message: invoiceNumber
+      ? `Invoice ${invoiceNumber} has been created successfully.`
+      : "A new sale has been recorded.",
+  });
+
   return data;
 }
 
@@ -37,8 +55,7 @@ export async function getSales({
   startDate = "",
   endDate = "",
 } = {}) {
-  const { data: role, error: roleError } =
-    await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
@@ -104,17 +121,14 @@ export async function getSales({
 }
 
 export async function getSaleItems(saleId) {
-  const { data: role, error: roleError } =
-    await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
   }
 
   const isStaff = role === "STAFF";
-  const saleItemsTable = isStaff
-    ? "staff_sale_items"
-    : "manager_sale_items";
+  const saleItemsTable = isStaff ? "staff_sale_items" : "manager_sale_items";
 
   const { data, error } = await supabase
     .from(saleItemsTable)
@@ -151,8 +165,7 @@ export async function getSaleItems(saleId) {
 }
 
 export async function getSaleDetails(saleId) {
-  const { data: role, error: roleError } =
-    await supabase.rpc("get_my_role");
+  const { data: role, error: roleError } = await supabase.rpc("get_my_role");
 
   if (roleError) {
     throw roleError;
@@ -160,9 +173,7 @@ export async function getSaleDetails(saleId) {
 
   const isStaff = role === "STAFF";
   const salesTable = isStaff ? "staff_sales" : "manager_sales";
-  const saleItemsTable = isStaff
-    ? "staff_sale_items"
-    : "manager_sale_items";
+  const saleItemsTable = isStaff ? "staff_sale_items" : "manager_sale_items";
 
   const saleQuery = supabase
     .from(salesTable)
@@ -223,10 +234,7 @@ export async function getSaleDetails(saleId) {
     .eq("sale_id", saleId)
     .order("id", { ascending: true });
 
-  const [saleResult, itemsResult] = await Promise.all([
-    saleQuery,
-    itemsQuery,
-  ]);
+  const [saleResult, itemsResult] = await Promise.all([saleQuery, itemsQuery]);
 
   if (saleResult.error) {
     throw saleResult.error;
