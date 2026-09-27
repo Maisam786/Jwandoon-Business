@@ -1,5 +1,4 @@
 import { supabase } from "./supabase";
-import { emitNotification } from "./notificationService";
 
 export async function receiveStock({
   productId,
@@ -22,7 +21,9 @@ export async function receiveStock({
     cleanPurchasePrice !== null &&
     (!Number.isFinite(cleanPurchasePrice) || cleanPurchasePrice < 0)
   ) {
-    throw new Error("Purchase price must be a valid non-negative number.");
+    throw new Error(
+      "Purchase price must be a valid non-negative number.",
+    );
   }
 
   const cleanReason =
@@ -41,37 +42,16 @@ export async function receiveStock({
     throw error;
   }
 
-  emitNotification({
-    type: "stock",
-    title: "Stock received",
-    message: `${receivedQuantity} unit${
-      receivedQuantity === 1 ? "" : "s"
-    } received successfully.`,
-  });
+  /*
+    Persistent notifications are now created by the
+    receive_stock() PostgreSQL function.
 
-  notifyLowStock(data);
+    This keeps the notification transaction tied to the
+    successful stock operation and prevents duplicate
+    frontend notifications.
+  */
 
   return data;
-}
-
-function notifyLowStock(product) {
-  if (!product) {
-    return;
-  }
-
-  const stock = Number(product.stock_quantity || 0);
-  const minimumStock = Number(product.minimum_stock || 0);
-
-  if (stock <= minimumStock) {
-    emitNotification({
-      type: "warning",
-      title: stock === 0 ? "Product out of stock" : "Low stock alert",
-      message:
-        stock === 0
-          ? `${product.name} is out of stock.`
-          : `${product.name} is low on stock: ${stock} remaining, minimum ${minimumStock}.`,
-    });
-  }
 }
 
 /**
@@ -83,21 +63,37 @@ function notifyLowStock(product) {
  * Authorization is enforced by the secure
  * adjust_stock() PostgreSQL function.
  */
-export async function adjustStock({ productId, quantity, reason }) {
+export async function adjustStock({
+  productId,
+  quantity,
+  reason,
+}) {
   const adjustmentQuantity = Number(quantity);
 
-  if (!Number.isInteger(adjustmentQuantity) || adjustmentQuantity === 0) {
-    throw new Error("Adjustment quantity must be a non-zero whole number.");
+  if (
+    !Number.isInteger(adjustmentQuantity) ||
+    adjustmentQuantity === 0
+  ) {
+    throw new Error(
+      "Adjustment quantity must be a non-zero whole number.",
+    );
   }
 
-  const cleanReason = typeof reason === "string" ? reason.trim() : "";
+  const cleanReason =
+    typeof reason === "string"
+      ? reason.trim()
+      : "";
 
   if (!cleanReason) {
-    throw new Error("A reason is required for stock adjustment.");
+    throw new Error(
+      "A reason is required for stock adjustment.",
+    );
   }
 
   if (cleanReason.length > 500) {
-    throw new Error("Adjustment reason cannot exceed 500 characters.");
+    throw new Error(
+      "Adjustment reason cannot exceed 500 characters.",
+    );
   }
 
   const { data, error } = await supabase.rpc("adjust_stock", {
@@ -110,20 +106,14 @@ export async function adjustStock({ productId, quantity, reason }) {
     throw error;
   }
 
-  emitNotification({
-    type: adjustmentQuantity > 0 ? "stock" : "warning",
-    title:
-      adjustmentQuantity > 0
-        ? "Stock increased"
-        : "Stock decreased",
-    message: `${Math.abs(adjustmentQuantity)} unit${
-      Math.abs(adjustmentQuantity) === 1 ? "" : "s"
-    } ${
-      adjustmentQuantity > 0 ? "added to" : "removed from"
-    } stock.`,
-  });
+  /*
+    Persistent notifications are now created by the
+    adjust_stock() PostgreSQL function.
 
-  notifyLowStock(data);
+    This prevents duplicate notifications because the
+    database operation and notification are part of the
+    same transaction.
+  */
 
   return data;
 }

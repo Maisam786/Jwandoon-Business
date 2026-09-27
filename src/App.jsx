@@ -9,7 +9,11 @@ import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import Users from "./pages/Users";
 import AuditLogs from "./pages/AuditLogs";
+import Settings from "./pages/Settings";
 import AcceptInvite from "./pages/AcceptInvite";
+
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
@@ -31,6 +35,10 @@ function AppRouter() {
     return <AcceptInvite />;
   }
 
+  if (pathname === "/reset-password") {
+    return <ResetPassword />;
+  }
+
   return <ProtectedApp />;
 }
 
@@ -47,6 +55,7 @@ function ProtectedApp() {
     reports: ["OWNER", "MANAGER"],
     users: ["OWNER"],
     auditLogs: ["OWNER"],
+    settings: ["OWNER", "MANAGER", "STAFF"],
   };
 
   useEffect(() => {
@@ -134,6 +143,9 @@ function ProtectedApp() {
       case "auditLogs":
         return <AuditLogs />;
 
+      case "settings":
+        return <Settings />;
+
       default:
         return <Dashboard />;
     }
@@ -159,6 +171,12 @@ function LoginScreen() {
   const [error, setError] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
+
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  if (showForgotPassword) {
+    return <ForgotPassword onBack={() => setShowForgotPassword(false)} />;
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -207,7 +225,18 @@ function LoginScreen() {
           </label>
 
           <label>
-            Password
+            <span className="auth-label-row">
+              <span>Password</span>
+
+              <button
+                type="button"
+                className="auth-forgot-link"
+                onClick={() => setShowForgotPassword(true)}
+              >
+                Forgot password?
+              </button>
+            </span>
+
             <input
               type="password"
               value={password}

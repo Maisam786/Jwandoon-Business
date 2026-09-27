@@ -83,20 +83,16 @@ export async function verifyLoginOtp(email, otp) {
   }
 
   const { data, error } =
-    await supabase.functions.invoke(
-      "verify-login-otp",
-      {
-        body: {
-          email,
-          otp,
-        },
+    await supabase.functions.invoke("verify-login-otp", {
+      body: {
+        email,
+        otp,
       },
-    );
+    });
 
   if (error) {
     console.error("OTP verification error:", error);
 
-    // Try to read the actual Edge Function response
     if (error.context) {
       try {
         const responseData = await error.context.json();
@@ -143,4 +139,66 @@ export async function isOtpVerified() {
   }
 
   return data === true;
+}
+
+/*
+ * Send a password reset email.
+ */
+export async function sendPasswordResetEmail(email) {
+  const cleanEmail = String(email || "")
+    .trim()
+    .toLowerCase();
+
+  if (!cleanEmail) {
+    throw new Error("Please enter your email address.");
+  }
+
+  const redirectTo = `${window.location.origin}/reset-password`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    cleanEmail,
+    {
+      redirectTo,
+    },
+  );
+
+  if (error) {
+    throw error;
+  }
+}
+
+/*
+ * Update the password for the currently authenticated
+ * password-reset session.
+ */
+export async function updatePassword(newPassword) {
+  const password = String(newPassword || "");
+
+  if (password.length < 8) {
+    throw new Error(
+      "Password must be at least 8 characters long.",
+    );
+  }
+
+  const { data, error } = await supabase.auth.updateUser({
+    password,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+/*
+ * Change the password for the currently signed-in user.
+ *
+ * The user already has an authenticated + OTP-verified
+ * session, so we update the password directly without
+ * creating another sign-in event that could interfere
+ * with the OTP flow.
+ */
+export async function changePassword(newPassword) {
+  return updatePassword(newPassword);
 }

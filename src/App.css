@@ -3,7 +3,6 @@
    Authentication + User Management Modal
    ========================================================= */
 
-
 /* =========================================================
    AUTHENTICATION
    ========================================================= */
@@ -144,8 +143,7 @@
 .auth-form input:focus {
   border-color: var(--color-primary);
 
-  box-shadow:
-    0 0 0 3px rgba(194, 142, 46, 0.12);
+  box-shadow: 0 0 0 3px rgba(194, 142, 46, 0.12);
 
   background: var(--color-surface);
 }
@@ -180,8 +178,7 @@
 
   transform: translateY(-1px);
 
-  box-shadow:
-    0 8px 20px rgba(194, 142, 46, 0.2);
+  box-shadow: 0 8px 20px rgba(194, 142, 46, 0.2);
 }
 
 .auth-form button:active:not(:disabled) {
@@ -217,7 +214,6 @@
   line-height: 1.5;
   text-align: center;
 }
-
 
 /* =========================================================
    AUTHENTICATION LOADING
@@ -264,7 +260,6 @@
     transform: rotate(360deg);
   }
 }
-
 
 /* =========================================================
    ADD USER MODAL
@@ -385,7 +380,6 @@
   cursor: not-allowed;
 }
 
-
 /* =========================================================
    USER MODAL FORM
    ========================================================= */
@@ -443,8 +437,7 @@
 .user-modal-form select:focus {
   border-color: var(--color-primary);
 
-  box-shadow:
-    0 0 0 3px rgba(194, 142, 46, 0.12);
+  box-shadow: 0 0 0 3px rgba(194, 142, 46, 0.12);
 
   background: var(--color-surface);
 }
@@ -454,7 +447,6 @@
   opacity: 0.65;
   cursor: not-allowed;
 }
-
 
 /* =========================================================
    USER FORM MESSAGES
@@ -498,7 +490,6 @@
 
   color: #416542;
 }
-
 
 /* =========================================================
    USER MODAL FOOTER
@@ -559,8 +550,7 @@
   background: var(--color-primary);
   color: #ffffff;
 
-  box-shadow:
-    0 5px 14px rgba(194, 142, 46, 0.2);
+  box-shadow: 0 5px 14px rgba(194, 142, 46, 0.2);
 }
 
 .user-modal-submit:hover:not(:disabled) {
@@ -569,8 +559,7 @@
 
   transform: translateY(-1px);
 
-  box-shadow:
-    0 7px 18px rgba(194, 142, 46, 0.26);
+  box-shadow: 0 7px 18px rgba(194, 142, 46, 0.26);
 }
 
 .user-modal-submit svg {
@@ -585,7 +574,6 @@
   cursor: not-allowed;
   transform: none;
 }
-
 
 /* =========================================================
    USER ACTIONS
@@ -646,7 +634,6 @@
   font-weight: 700;
 }
 
-
 /* =========================================================
    ANIMATIONS
    ========================================================= */
@@ -672,7 +659,6 @@
     transform: translateY(0) scale(1);
   }
 }
-
 
 /* =========================================================
    RESPONSIVE AUTH
@@ -700,7 +686,6 @@
     font-size: 28px;
   }
 }
-
 
 /* =========================================================
    RESPONSIVE USER MODAL
@@ -740,7 +725,6 @@
     width: 100%;
   }
 }
-
 
 /* =========================================================
    VERY NARROW DEVICES
@@ -813,12 +797,11 @@
   padding: 11px 13px;
   border: 1px solid rgba(194, 142, 46, 0.18);
   border-radius: 10px;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(194, 142, 46, 0.08),
-      rgba(243, 235, 224, 0.55)
-    );
+  background: linear-gradient(
+    135deg,
+    rgba(194, 142, 46, 0.08),
+    rgba(243, 235, 224, 0.55)
+  );
   color: var(--color-text);
   font-size: 12px;
   font-weight: 800;
@@ -975,6 +958,358 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-form input[inputmode="numeric"],
   .auth-otp-actions button {
+    transition: none;
+  }
+}
+
+/* =========================================================
+   JWANDOON AUTHENTICATION POLISH
+   Login / Forgot Password / Reset Password
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   AUTH LABEL ROW
+   --------------------------------------------------------- */
+
+.auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.auth-label-row > span {
+  overflow-wrap: normal;
+}
+
+.auth-forgot-link {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-hover);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.auth-forgot-link:hover {
+  color: var(--color-primary);
+}
+
+.auth-forgot-link:active {
+  opacity: 0.7;
+}
+
+/* ---------------------------------------------------------
+   AUTH INPUT ICON
+   --------------------------------------------------------- */
+
+.auth-input-icon {
+  position: relative;
+  width: 100%;
+}
+
+.auth-input-icon svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  z-index: 1;
+  width: 17px;
+  height: 17px;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.auth-input-icon input {
+  padding-left: 42px;
+}
+
+.auth-input-icon:focus-within svg {
+  color: var(--color-primary);
+}
+
+/* ---------------------------------------------------------
+   AUTH SUCCESS MESSAGE
+   --------------------------------------------------------- */
+
+.auth-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: -2px 0 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(74, 114, 75, 0.18);
+  border-radius: 10px;
+  background: rgba(74, 114, 75, 0.07);
+  color: var(--color-success);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.auth-success svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* ---------------------------------------------------------
+   AUTH BACK LINK
+   --------------------------------------------------------- */
+
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 18px;
+  padding: 7px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.auth-back-link svg {
+  width: 15px;
+  height: 15px;
+}
+
+.auth-back-link:hover {
+  color: var(--color-primary);
+  transform: translateX(-1px);
+}
+
+/* ---------------------------------------------------------
+   FORGOT / RESET PAGE REFINEMENT
+   --------------------------------------------------------- */
+
+.auth-card .auth-heading p {
+  max-width: 370px;
+}
+
+/* ---------------------------------------------------------
+   RESET PASSWORD
+   --------------------------------------------------------- */
+
+.reset-password-hint {
+  margin: -5px 0 0;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.reset-complete {
+  padding: 4px 0 2px;
+  text-align: center;
+}
+
+.reset-complete-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  border: 1px solid rgba(74, 114, 75, 0.16);
+  border-radius: 50%;
+  background: rgba(74, 114, 75, 0.08);
+  color: var(--color-success);
+}
+
+.reset-complete-icon svg {
+  width: 25px;
+  height: 25px;
+}
+
+.reset-complete h2 {
+  margin: 0 0 8px;
+  color: var(--color-text);
+  font-family: "Playfair Display", serif;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.reset-complete p {
+  max-width: 350px;
+  margin: 0 auto 22px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.reset-complete button {
+  width: 100%;
+  min-height: 46px;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.reset-complete button:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(194, 142, 46, 0.2);
+}
+
+/* ---------------------------------------------------------
+   FORGOT PASSWORD SUCCESS STATE
+   --------------------------------------------------------- */
+
+.auth-reset-success {
+  align-items: flex-start;
+}
+
+/* ---------------------------------------------------------
+   AUTH SCREEN SUBTLE DECORATION
+   --------------------------------------------------------- */
+
+.auth-screen {
+  position: relative;
+  isolation: isolate;
+}
+
+.auth-screen::before {
+  content: "";
+  position: fixed;
+  top: -180px;
+  left: 50%;
+  z-index: -1;
+  width: 520px;
+  height: 520px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(194, 142, 46, 0.045);
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+   AUTH CARD REFINEMENT
+   --------------------------------------------------------- */
+
+.auth-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(194, 142, 46, 0.55),
+    transparent
+  );
+}
+
+/* ---------------------------------------------------------
+   AUTH BUTTON PRESS
+   --------------------------------------------------------- */
+
+.auth-form button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------
+   AUTH MOBILE
+   --------------------------------------------------------- */
+
+@media (max-width: 520px) {
+  .auth-card {
+    max-width: 430px;
+  }
+
+  .auth-label-row {
+    gap: 8px;
+  }
+
+  .auth-forgot-link {
+    font-size: 10px;
+  }
+}
+
+/* ---------------------------------------------------------
+   AUTH VERY NARROW DEVICES
+   --------------------------------------------------------- */
+
+@media (max-width: 380px) {
+  .auth-screen {
+    padding: 12px 10px;
+  }
+
+  .auth-card {
+    padding: 25px 18px;
+    border-radius: 18px;
+  }
+
+  .auth-card::before {
+    left: 12%;
+    right: 12%;
+  }
+
+  .auth-label-row {
+    align-items: flex-start;
+  }
+
+  .auth-forgot-link {
+    font-size: 10px;
+  }
+
+  .reset-complete h2 {
+    font-size: 21px;
+  }
+
+  .reset-complete p {
+    font-size: 12px;
+  }
+}
+
+/* ---------------------------------------------------------
+   REDUCED MOTION
+   --------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-forgot-link,
+  .auth-back-link,
+  .reset-complete button,
+  .auth-form button {
     transition: none;
   }
 }
