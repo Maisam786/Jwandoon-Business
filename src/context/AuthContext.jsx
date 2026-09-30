@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { supabase } from "../services/supabase";
 
@@ -22,8 +28,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const [otpRequired, setOtpRequired] = useState(false);
-
   const [otpEmail, setOtpEmail] = useState("");
+
+  /*
+   * Prevent the Supabase auth listener from
+   * interfering while the initial session is
+   * being restored.
+   */
+  const initializingRef = useRef(true);
+
+  /*
+   * Prevent multiple session restoration
+   * requests from running at the same time.
+   */
+  const sessionCheckRef = useRef(false);
+
+  /* =========================================================
+     PASSWORD RESET
+     ========================================================= */
 
   async function requestPasswordReset(email) {
     await sendPasswordResetEmail(email);
@@ -33,13 +55,10 @@ export function AuthProvider({ children }) {
     await changePassword(newPassword);
   }
 
-  /*
-   * Password login.
-   *
-   * At this point the Supabase session exists,
-   * but the user is NOT considered fully
-   * authenticated by the application yet.
-   */
+  /* =========================================================
+     PASSWORD LOGIN
+     ========================================================= */
+
   async function signIn(email, password) {
     const data = await authSignIn(email, password);
 
@@ -52,7 +71,9 @@ export function AuthProvider({ children }) {
     setUser(signedInUser);
     setProfile(null);
 
-    const normalizedEmail = String(signedInUser.email || email)
+    const normalizedEmail = String(
+      signedInUser.email || email
+    )
       .trim()
       .toLowerCase();
 
@@ -67,11 +88,17 @@ export function AuthProvider({ children }) {
       await sendLoginOtp(normalizedEmail);
     } catch (error) {
       /*
-       * If OTP generation fails, don't leave
-       * a partially authenticated application
-       * session running.
+       * If OTP generation fails, completely
+       * clear the partially authenticated state.
        */
-      await authSignOut();
+      try {
+        await authSignOut();
+      } catch (signOutError) {
+        console.error(
+          "Failed to sign out after OTP error:",
+          signOutError
+        );
+      }
 
       setUser(null);
       setProfile(null);
@@ -84,28 +111,33 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  /*
-   * Verify the OTP entered by the user.
-   */
+  /* =========================================================
+     OTP VERIFICATION
+     ========================================================= */
+
   async function verifyOtp(otp) {
     if (!user || !otpEmail) {
-      throw new Error("No login verification is currently pending.");
+      throw new Error(
+        "No login verification is currently pending."
+      );
     }
 
     await verifyLoginOtp(otpEmail, otp);
 
     /*
-     * Ask Postgres to confirm that this exact
-     * Supabase session has been OTP verified.
+     * Confirm OTP verification at the database level.
      */
     const verified = await isOtpVerified();
 
     if (!verified) {
-      throw new Error("OTP verification could not be confirmed.");
+      throw new Error(
+        "OTP verification could not be confirmed."
+      );
     }
 
     /*
-     * Only NOW do we load the business profile.
+     * Only after OTP verification do we load
+     * the user's business profile.
      */
     const userProfile = await getUserProfile(user.id);
 
@@ -126,71 +158,121 @@ export function AuthProvider({ children }) {
     return userProfile;
   }
 
+  /* =========================================================
+     RESEND OTP
+     ========================================================= */
+
   async function resendOtp() {
     if (!user || !otpEmail) {
-      throw new Error("No login verification is currently pending.");
+      throw new Error(
+        "No login verification is currently pending."
+      );
     }
 
     await sendLoginOtp(otpEmail);
   }
 
-  async function signOut() {
-    await authSignOut();
+  /* =========================================================
+     SIGN OUT
+     ========================================================= */
 
-    setUser(null);
-    setProfile(null);
-    setOtpRequired(false);
-    setOtpEmail("");
+  async function signOut() {
+    try {
+      await authSignOut();
+    } finally {
+      setUser(null);
+      setProfile(null);
+      setOtpRequired(false);
+      setOtpEmail("");
+    }
   }
 
-  /*
-   * Load an existing Supabase session when
-   * the application starts or the page reloads.
-   */
+  /* =========================================================
+     RESTORE EXISTING SESSION
+     ========================================================= */
+
   async function loadSession() {
+    /*
+     * Don't allow multiple restoration checks
+     * to run simultaneously.
+     */
+    if (sessionCheckRef.current) {
+      return;
+    }
+
+    sessionCheckRef.current = true;
+
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
+      /*
+       * No Supabase session.
+       */
       if (!session?.user) {
         setUser(null);
         setProfile(null);
         setOtpRequired(false);
         setOtpEmail("");
+
         return;
       }
 
       const sessionUser = session.user;
 
-      setUser(sessionUser);
-
-      const normalizedEmail = String(sessionUser.email || "")
+      const normalizedEmail = String(
+        sessionUser.email || ""
+      )
         .trim()
         .toLowerCase();
 
+      /*
+       * Restore the user first.
+       */
+      setUser(sessionUser);
       setOtpEmail(normalizedEmail);
 
       /*
-       * Check the database rather than trusting
-       * local React state.
+       * IMPORTANT:
+       *
+       * Check whether THIS existing session has
+       * already completed OTP verification.
        */
       const verified = await isOtpVerified();
 
       if (!verified) {
+        /*
+         * The session exists but OTP has not been
+         * verified for this session.
+         */
         setProfile(null);
         setOtpRequired(true);
+
         return;
       }
 
       /*
-       * OTP is already verified for this
-       * current Supabase session.
+       * OTP is already verified.
+       *
+       * Restore the business profile.
        */
-      const userProfile = await getUserProfile(sessionUser.id);
+      const userProfile = await getUserProfile(
+        sessionUser.id
+      );
 
+      /*
+       * Account has been deactivated.
+       */
       if (!userProfile?.active) {
-        await authSignOut();
+        try {
+          await authSignOut();
+        } catch (signOutError) {
+          console.error(
+            "Failed to sign out inactive user:",
+            signOutError
+          );
+        }
 
         setUser(null);
         setProfile(null);
@@ -200,80 +282,209 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      /*
+       * Everything is valid.
+       *
+       * Restore the dashboard directly.
+       */
       setProfile(userProfile);
       setOtpRequired(false);
     } catch (error) {
-      console.error("Failed to load authentication session:", error);
+      console.error(
+        "Failed to restore authentication session:",
+        error
+      );
 
       /*
-       * Don't automatically destroy the session
-       * for every temporary error.
+       * IMPORTANT:
+       *
+       * Do NOT automatically sign the user out
+       * just because a temporary request failed.
+       *
+       * This prevents temporary network/browser
+       * issues from destroying a valid session.
        */
     } finally {
+      sessionCheckRef.current = false;
+
+      /*
+       * The initial authentication restoration
+       * is now complete.
+       */
+      initializingRef.current = false;
+
       setLoading(false);
     }
   }
 
+  /* =========================================================
+     AUTH INITIALIZATION + AUTH STATE LISTENER
+     ========================================================= */
+
   useEffect(() => {
+    let mounted = true;
+
+    /*
+     * First restore the existing session.
+     */
     loadSession();
 
+    /*
+     * Listen for future Supabase authentication
+     * events.
+     */
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      /*
-       * SIGNED_OUT is the only auth event
-       * that should immediately clear the
-       * application state.
-       */
-      if (event === "SIGNED_OUT" || !session?.user) {
-        setUser(null);
-        setProfile(null);
-        setOtpRequired(false);
-        setOtpEmail("");
-        setLoading(false);
-        return;
+    } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!mounted) {
+          return;
+        }
+
+        /*
+         * CRITICAL FIX
+         *
+         * During the initial application startup,
+         * loadSession() is responsible for deciding
+         * whether OTP is required.
+         *
+         * Therefore the auth listener must NOT
+         * overwrite that state.
+         */
+        if (initializingRef.current) {
+          /*
+           * Only handle an immediate SIGNED_OUT
+           * event if there is genuinely no session.
+           */
+          if (
+            event === "SIGNED_OUT" &&
+            !session?.user
+          ) {
+            setUser(null);
+            setProfile(null);
+            setOtpRequired(false);
+            setOtpEmail("");
+          }
+
+          return;
+        }
+
+        /*
+         * User explicitly signed out.
+         */
+        if (
+          event === "SIGNED_OUT" ||
+          !session?.user
+        ) {
+          setUser(null);
+          setProfile(null);
+          setOtpRequired(false);
+          setOtpEmail("");
+
+          return;
+        }
+
+        /*
+         * A NEW password login occurred.
+         *
+         * The signIn() function itself will also
+         * establish the OTP state and send the OTP.
+         *
+         * We keep the listener lightweight and
+         * do not perform database calls here.
+         */
+        if (event === "SIGNED_IN") {
+          const signedInUser = session.user;
+
+          const normalizedEmail = String(
+            signedInUser.email || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          setUser(signedInUser);
+          setProfile(null);
+          setOtpEmail(normalizedEmail);
+          setOtpRequired(true);
+
+          return;
+        }
+
+        /*
+         * TOKEN_REFRESHED
+         *
+         * Do NOT reset profile or OTP state here.
+         *
+         * A token refresh is not a new login and
+         * should not send the user back to OTP.
+         */
+        if (event === "TOKEN_REFRESHED") {
+          setUser(session.user);
+
+          return;
+        }
+
+        /*
+         * Other auth events such as USER_UPDATED
+         * should not reset the authenticated UI.
+         */
+        if (event === "USER_UPDATED") {
+          setUser(session.user);
+        }
       }
+    );
 
-      /*
-       * We intentionally do NOT call
-       * getUserProfile() here.
-       *
-       * A newly signed-in user must complete
-       * OTP first.
-       */
-      setUser(session.user);
-
-      const normalizedEmail = String(session.user.email || "")
-        .trim()
-        .toLowerCase();
-
-      setOtpEmail(normalizedEmail);
-
-      /*
-       * For SIGNED_IN, loadSession/OTP flow
-       * handles the actual authorization.
-       *
-       * Avoid doing database work directly
-       * inside this auth-state callback.
-       */
-      if (event === "SIGNED_IN") {
-        setProfile(null);
-        setOtpRequired(true);
+    /*
+     * Browser/tab visibility handling.
+     *
+     * When the user returns to the application after
+     * switching tabs or minimizing the browser, quietly
+     * verify that the existing session is still valid.
+     *
+     * We deliberately do NOT display the OTP screen
+     * during this check.
+     */
+    function handleVisibilityChange() {
+      if (
+        document.visibilityState === "visible" &&
+        !initializingRef.current
+      ) {
+        loadSession();
       }
+    }
 
-      setLoading(false);
-    });
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+
+      subscription.unsubscribe();
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
   }, []);
 
-  const isAuthenticated = !!user && !!profile && !otpRequired;
+  /* =========================================================
+     AUTHENTICATION STATE
+     ========================================================= */
+
+  const isAuthenticated =
+    !!user &&
+    !!profile &&
+    !otpRequired;
 
   return (
     <AuthContext.Provider
       value={{
         user,
         profile,
+
         loading,
 
         otpRequired,
@@ -295,11 +506,17 @@ export function AuthProvider({ children }) {
   );
 }
 
+/* =========================================================
+   HOOK
+   ========================================================= */
+
 export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
+    throw new Error(
+      "useAuth must be used inside AuthProvider"
+    );
   }
 
   return context;
