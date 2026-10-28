@@ -50,6 +50,65 @@ export async function createSale({
   return data;
 }
 
+export async function updateSale({
+  saleId,
+  customerName,
+  discount = 0,
+  items,
+}) {
+  if (!saleId) {
+    throw new Error("A valid receipt is required.");
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error("A receipt must contain at least one product.");
+  }
+
+  const cleanItems = items.map((item) => ({
+    product_id: Number(item.product_id),
+    quantity: Number(item.quantity),
+    selling_price: Number(item.selling_price),
+  }));
+
+  if (
+    cleanItems.some(
+      (item) =>
+        !Number.isInteger(item.product_id) ||
+        item.product_id <= 0 ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity <= 0 ||
+        !Number.isFinite(item.selling_price) ||
+        item.selling_price < 0
+    )
+  ) {
+    throw new Error("Check each product, quantity, and selling price.");
+  }
+
+  if (new Set(cleanItems.map((item) => item.product_id)).size !== cleanItems.length) {
+    throw new Error("Each product can appear only once on a receipt.");
+  }
+
+  const cleanDiscount =
+    discount === "" || discount == null ? 0 : Number(discount);
+
+  if (!Number.isFinite(cleanDiscount) || cleanDiscount < 0) {
+    throw new Error("Discount must be a valid non-negative number.");
+  }
+
+  const { data, error } = await supabase.rpc("update_sale", {
+    p_sale_id: saleId,
+    p_customer_name: customerName?.trim() || null,
+    p_items: cleanItems,
+    p_discount_amount: cleanDiscount,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
 export async function getSales({
   search = "",
   startDate = "",
