@@ -5,6 +5,10 @@ import {
   FiChevronUp,
   FiDollarSign,
   FiEye,
+  FiEdit2,
+  FiPlus,
+  FiTrash2,
+  FiSave,
   FiRefreshCw,
   FiSearch,
   FiShoppingBag,
@@ -16,7 +20,10 @@ import {
 import {
   getSales,
   getSaleDetails,
+  updateSale,
 } from "../services/saleService";
+import { getProducts } from "../services/productService";
+import { useAuth } from "../context/AuthContext";
 
 import "./Sales.css";
 
@@ -41,6 +48,8 @@ function formatDateForInput(date) {
 }
 
 export default function Sales() {
+  const { profile } = useAuth();
+  const canEditReceipts = ["OWNER", "MANAGER"].includes(profile?.role);
   const [sales, setSales] = useState([]);
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -52,6 +61,7 @@ export default function Sales() {
 
   const [selectedSale, setSelectedSale] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [editingSale, setEditingSale] = useState(null);
 
   const [expandedSale, setExpandedSale] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
@@ -127,6 +137,28 @@ export default function Sales() {
     } finally {
       setDetailsLoading(false);
     }
+  }
+
+  async function openEdit(sale) {
+    if (!canEditReceipts) return;
+    try {
+      setError("");
+      setDetailsLoading(true);
+      setEditingSale(await getSaleDetails(sale.id));
+    } catch (err) {
+      console.error("Failed to load receipt for editing:", err);
+      setError(err?.message || "Unable to load this receipt for editing.");
+    } finally {
+      setDetailsLoading(false);
+    }
+  }
+
+  async function saveEditedSale(payload) {
+    await updateSale(payload);
+    setEditingSale(null);
+    setSelectedSale(null);
+    setExpandedItems({});
+    await loadSales(true);
   }
 
   async function toggleExpanded(sale) {
@@ -335,6 +367,8 @@ export default function Sales() {
                     items={expandedItems[sale.id]}
                     onToggle={() => toggleExpanded(sale)}
                     onView={() => openSale(sale)}
+                    canEdit={canEditReceipts}
+                    onEdit={() => openEdit(sale)}
                   />
                 ))}
               </tbody>
@@ -342,6 +376,10 @@ export default function Sales() {
           </div>
         )}
       </div>
+
+      {editingSale && canEditReceipts && (
+        <EditSaleModal details={editingSale} onClose={() => setEditingSale(null)} onSave={saveEditedSale} />
+      )}
 
       {selectedSale && (
         <SaleDetailsModal
@@ -360,6 +398,8 @@ function SalesRow({
   items,
   onToggle,
   onView,
+  canEdit,
+  onEdit,
 }) {
   return (
     <>
@@ -409,20 +449,16 @@ function SalesRow({
         </td>
 
         <td>
-          <button
-            type="button"
-            className="view-sale-button"
-            onClick={onView}
-          >
-            <FiEye />
-            View
-          </button>
+          <div className="sales-row-actions">
+            <button type="button" className="view-sale-button" onClick={onView}><FiEye /> View</button>
+            {canEdit && <button type="button" className="edit-sale-button" onClick={onEdit}><FiEdit2 /> Edit</button>}
+          </div>
         </td>
       </tr>
 
       {expanded && (
         <tr className="sales-items-row">
-          <td colSpan="7">
+          <td colSpan={canEdit ? 8 : 7}>
             {!items ? (
               <div className="sales-items-loading">
                 Loading products...
@@ -454,6 +490,125 @@ function SalesRow({
         </tr>
       )}
     </>
+  );
+}
+
+
+function EditSaleModal({ details, onClose, onSave }) {
+  const { sale, items: originalItems } = details;
+  const [products, setProducts] = useState([]);
+  const [customerName, setCustomerName] = useState(sale.customer_name || "");
+  const [discount, setDiscount] = useState(String(sale.discount_amount || 0));
+  const [items, setItems] = useState(() => originalItems.map((item) => ({
+    product_id: Number(item.product_id),
+    product_name: item.product_name,
+    quantity: String(item.quantity),
+    selling_price: String(item.selling_price),
+  })));
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    getProducts({ includeInactive: true }).then((data) => {
+      if (active) setProducts(data);
+    }).catch((err) => {
+      if (active) setError(err?.message || "Unable to load products.");
+    }).finally(() => {
+      if (active) setLoadingProducts(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const subtotal = items.reduce((sum, item) => {
+    const q = Number(item.quantity), p = Number(item.selling_price);
+    return sum + (Number.isFinite(q) && Number.isFinite(p) ? q * p : 0);
+  }, 0);
+  const discountValue = Number(discount || 0);
+  const total = Math.max(0, subtotal - (Number.isFinite(discountValue) ? discountValue : 0));
+
+  function changeItem(index, field, value) {
+    setItems((current) => current.map((item, i) => {
+      if (i !== index) return item;
+      if (field === "product_id") {
+        const product = products.find((entry) => Number(entry.id) === Number(value));
+        return { ...item, product_id: Number(value), product_name: product?.name || item.product_name, selling_price: String(product?.selling_price ?? item.selling_price) };
+      }
+      return { ...item, [field]: value };
+    }));
+  }
+
+  function addItem() {
+    const product = products.find((p) => p.active !== false && !items.some((item) => Number(item.product_id) === Number(p.id)));
+    if (!product) { setError("No additional active products are available to add."); return; }
+    setError("");
+    setItems((current) => [...current, { product_id: Number(product.id), product_name: product.name, quantity: "1", selling_price: String(product.selling_price ?? 0) }]);
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    setError("");
+    if (!items.length) { setError("A receipt must contain at least one product."); return; }
+    const d = Number(discount || 0);
+    if (!Number.isFinite(d) || d < 0 || d > subtotal) { setError("Enter a valid discount that does not exceed the subtotal."); return; }
+    const cleanItems = items.map((item) => ({ product_id: Number(item.product_id), quantity: Number(item.quantity), selling_price: Number(item.selling_price) }));
+    if (cleanItems.some((item) => !Number.isInteger(item.product_id) || item.product_id <= 0 || !Number.isInteger(item.quantity) || item.quantity <= 0 || !Number.isFinite(item.selling_price) || item.selling_price < 0)) {
+      setError("Each product needs a valid quantity and non-negative price."); return;
+    }
+    if (new Set(cleanItems.map((item) => item.product_id)).size !== cleanItems.length) { setError("A product can only appear once. Remove duplicates before saving."); return; }
+    try {
+      setSaving(true);
+      await onSave({ saleId: sale.id, customerName, discount: d, items: cleanItems });
+    } catch (err) {
+      setError(err?.message || "Unable to update this receipt.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="sale-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) onClose(); }}>
+      <form className="sale-modal sale-edit-modal" onSubmit={submit}>
+        <div className="sale-modal-header">
+          <div><span>EDIT RECEIPT · OWNER / MANAGER</span><h2>{sale.invoice_number}</h2></div>
+          <button type="button" className="sale-modal-close" onClick={onClose} disabled={saving} aria-label="Close edit receipt"><FiX /></button>
+        </div>
+        <div className="sale-edit-body">
+          <div className="sale-edit-fields">
+            <label>Customer name<input value={customerName} maxLength={150} onChange={(e) => setCustomerName(e.target.value)} placeholder="Walk-in Customer" disabled={saving} /></label>
+            <label>Discount (Rs.)<input type="number" min="0" step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} disabled={saving} /></label>
+          </div>
+          {loadingProducts && <p className="sale-edit-hint">Loading product catalogue…</p>}
+          {items.map((item, index) => (
+            <div className="sale-edit-item" key={index}>
+              <label className="sale-edit-product">Product
+                <select value={item.product_id} onChange={(e) => changeItem(index, "product_id", e.target.value)} disabled={saving || loadingProducts}>
+                  {!products.some((p) => Number(p.id) === Number(item.product_id)) && <option value={item.product_id}>{item.product_name} (current receipt)</option>}
+                  {products.map((p) => <option key={p.id} value={p.id} disabled={items.some((other, i) => i !== index && Number(other.product_id) === Number(p.id))}>{p.name}{p.active === false ? " (inactive)" : ""}</option>)}
+                </select>
+              </label>
+              <label>Qty<input type="number" min="1" step="1" value={item.quantity} onChange={(e) => changeItem(index, "quantity", e.target.value)} disabled={saving} required /></label>
+              <label>Price (Rs.)<input type="number" min="0" step="0.01" value={item.selling_price} onChange={(e) => changeItem(index, "selling_price", e.target.value)} disabled={saving} required /></label>
+              <strong className="sale-edit-line-total">{formatCurrency(Number(item.quantity || 0) * Number(item.selling_price || 0))}</strong>
+              <button type="button" className="sale-edit-remove" onClick={() => setItems((current) => current.filter((_, i) => i !== index))} disabled={saving || items.length === 1} aria-label="Remove product"><FiTrash2 /></button>
+            </div>
+          ))}
+          <button type="button" className="sale-edit-add" onClick={addItem} disabled={saving || loadingProducts}><FiPlus /> Add product</button>
+          <div className="sale-edit-summary">
+            <div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>
+            <div><span>Discount</span><strong>− {formatCurrency(discountValue)}</strong></div>
+            <div className="sale-edit-grand-total"><span>Updated total</span><strong>{formatCurrency(total)}</strong></div>
+          </div>
+          {error && <div className="sale-edit-error" role="alert">{error}</div>}
+          <p className="sale-edit-warning">Saving updates this existing receipt and adjusts stock. The invoice number and original sale date stay unchanged.</p>
+        </div>
+        <div className="sale-edit-footer">
+          <button type="button" className="sale-edit-cancel" onClick={onClose} disabled={saving}>Cancel</button>
+          <button type="submit" className="sale-edit-save" disabled={saving || loadingProducts}><FiSave /> {saving ? "Saving receipt…" : "Save changes"}</button>
+        </div>
+      </form>
+    </div>
   );
 }
 
