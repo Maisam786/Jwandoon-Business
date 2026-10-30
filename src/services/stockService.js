@@ -12,18 +12,18 @@ export async function receiveStock({
     throw new Error("Quantity must be a positive whole number.");
   }
 
-  const cleanPurchasePrice =
-    purchasePrice === "" || purchasePrice == null
-      ? null
-      : Number(purchasePrice);
-
   if (
-    cleanPurchasePrice !== null &&
-    (!Number.isFinite(cleanPurchasePrice) || cleanPurchasePrice < 0)
+    purchasePrice === "" ||
+    purchasePrice == null ||
+    (typeof purchasePrice === "string" && purchasePrice.trim() === "")
   ) {
-    throw new Error(
-      "Purchase price must be a valid non-negative number.",
-    );
+    throw new Error("Purchase price is required when receiving stock.");
+  }
+
+  const cleanPurchasePrice = Number(purchasePrice);
+
+  if (!Number.isFinite(cleanPurchasePrice) || cleanPurchasePrice < 0) {
+    throw new Error("Purchase price must be a valid non-negative number.");
   }
 
   const cleanReason =
