@@ -672,6 +672,7 @@ export default function Inventory() {
                       )
                     }
                     placeholder="e.g. 300"
+                    required
                   />
                 </div>
               </div>
